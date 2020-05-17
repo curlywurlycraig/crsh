@@ -17,13 +17,4 @@ export const builtins = {
     Deno.env.set("OLDPWD", Deno.cwd());
     Deno.chdir(dir);
   },
-  vim: async (args) => {
-    const p = Deno.run({
-      cmd: ["vim"],
-      stdin: "inherit",
-      stdout: "inherit",
-    });
-
-    await p.output();
-  },
 };

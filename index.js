@@ -7,6 +7,7 @@ import { builtins } from "./builtins.js";
 import { fetchBody } from "./functions.js";
 import {
   getCursorPosition,
+  setCursorPosition,
   reverseControlCharactersBytesMap,
   controlCharactersBytesMap,
 } from "./tty.js";
@@ -46,6 +47,7 @@ while (true) {
     // console.debug("got ", buf.slice(0, numberOfBytesRead));
 
     if (controlCharactersBytesMap[relevantBuf] === "return") {
+      await Deno.stdout.write(new TextEncoder().encode("\n"));
       break;
     }
 
@@ -67,12 +69,13 @@ while (true) {
       const [row, column] = await getCursorPosition(Deno.stdout, Deno.stdin);
 
       // Move cursor to beginning of line
-      Deno.stdout.write(Uint8Array.from(reverseControlCharactersBytesMap));
+      setCursorPosition(Deno.stdout, row, 0);
 
       // Rewrite prompt
       await Deno.stdout.write(new TextEncoder().encode(prompt()));
 
       // Rewrite user input
+      await Deno.stdout.write(new TextEncoder().encode(userInput));
 
       continue;
     }
@@ -107,6 +110,8 @@ while (true) {
     stdout: new StringReader(),
     stderr: new StringReader(),
   };
+
+  const processes = [];
 
   for (let index = 0; index < commands.length; index++) {
     const command = commands[index];
@@ -182,14 +187,17 @@ while (true) {
     }
 
     try {
+      // TODO Support stderr pipes, and also file output
+      const isFirst = index === 0;
+      const isLast = index === commands.length - 1;
       const p = Deno.run({
         cmd: splitCommand,
-        stdout: "piped",
-        stdin: "piped",
-        stderr: "piped",
+        stdin: isFirst ? "inherit" : "piped",
+        stdout: isLast ? "inherit" : "piped",
+        stderr: isLast ? "inherit" : "piped",
       });
 
-      if (lastIO.stdout !== null) {
+      if (!isFirst && !isLast) {
         const prevOutput = lastIO.stdout;
         const currentInput = p.stdin;
 
@@ -202,6 +210,8 @@ while (true) {
         stdin: p.stdin,
         stderr: p.stderr,
       };
+
+      processes.push(p);
     } catch (err) {
       console.log("err is this ", err);
       if (err instanceof Deno.errors.NotFound) {
@@ -210,6 +220,8 @@ while (true) {
     }
   }
 
-  await Deno.copy(lastIO.stdout, Deno.stdout);
-  await Deno.copy(lastIO.stderr, Deno.stderr);
+  if (processes[0]) {
+    let status = await processes[0].status();
+    await processes[0].close();
+  }
 }

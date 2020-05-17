@@ -5,6 +5,8 @@
 Like can you just have them on git and reference them in deno?
 * TODO Allow pressing up to search through history
 * TODO Support vim, less etc
+* TODO Pipe to file
+* TODO stderr pipes
 * TODO Async reader triggering of custom functions
 * TODO Improve builtin, function definitions
 * TODO Let the user write functions that span multiple lines

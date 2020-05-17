@@ -30,6 +30,7 @@ export const getCursorPosition = async (stdout, stdin) => {
   return [row, column];
 };
 
-export const positionCursor = async (stdout, stdin, row, column) {
-//
-}
+export const setCursorPosition = (stdout, row, column) => {
+  const positionSegment = new TextEncoder().encode(`${row};${column}H`);
+  stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
+};
