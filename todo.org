@@ -5,7 +5,6 @@
 ** Make them available as hosted deno modules (on git?)
 Like can you just have them on git and reference them in deno?
 * TODO Allow pressing up to search through history
-* TODO Support vim, less etc
 * TODO Pipe to file
 * TODO stderr pipes
 * TODO Async reader triggering of custom functions

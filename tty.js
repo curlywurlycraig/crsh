@@ -3,7 +3,9 @@ export const controlCharactersBytesMap = {
   "13": "return",
   "127": "backspace",
   "27,91,68": "left",
+  "27,91,67": "right",
   "27,91,65": "up",
+  "27,91,66": "down",
   "27,91,70": "end",
   "27,91,72": "home",
 };

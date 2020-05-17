@@ -52,6 +52,9 @@ while (true) {
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "backspace") {
+      if (cursorPosition === 0) {
+        continue;
+      }
       // Remove character before current cursor position
       userInput =
         userInput.slice(0, cursorPosition - 1) +
@@ -77,6 +80,8 @@ while (true) {
       // Rewrite user input
       await Deno.stdout.write(new TextEncoder().encode(userInput));
 
+      // Move cursor to final position in text
+      setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
       continue;
     }
 
@@ -92,9 +97,28 @@ while (true) {
       continue;
     }
 
+    if (controlCharactersBytesMap[relevantBuf] === "left") {
+      // Read history and update print
+      if (cursorPosition === 0) continue;
+
+      await Deno.stdout.write(relevantBuf);
+      cursorPosition--;
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "right") {
+      // Read history and update print
+      if (cursorPosition === userInput.length) continue;
+
+      await Deno.stdout.write(relevantBuf);
+      cursorPosition++;
+      continue;
+    }
+
     const decodedString = new TextDecoder().decode(relevantBuf);
 
     await Deno.stdout.write(relevantBuf);
+    cursorPosition++;
 
     userInput += decodedString;
   }
@@ -120,8 +144,6 @@ while (true) {
     const trimmed = command.trim();
 
     if (/^\(.*\) ?=> ?.*$/.test(trimmed)) {
-      const func = eval(trimmed);
-
       const lastOutput = await readAll(lastIO.stdout);
 
       let json = undefined;
@@ -131,10 +153,15 @@ while (true) {
       } finally {
       }
 
-      // TODO Capture console logs and other stdout/err writes here
+      const lines = lastOutput.split("\n");
+
+      // TODO Capture console logs and other stdout/err writes here.
+      // This can be done by somehow setting the stdout for this execution.
+      // How can I do that?
+      const func = eval(trimmed);
       const result = func({
         raw: lastOutput,
-        lines: lastOutput.split("\n"),
+        lines,
         json,
       });
 
@@ -218,7 +245,7 @@ while (true) {
 
       processes.push(p);
     } catch (err) {
-      console.log("err is this ", err);
+      //   console.debug("err is this ", err);
       if (err instanceof Deno.errors.NotFound) {
         console.error(`Couldn't find command "${executable}"`);
       }
