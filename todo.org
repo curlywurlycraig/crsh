@@ -1,4 +1,5 @@
 * TODO Allow moving the cursor
+* TODO Why doesn't git commit -am "thing" work?
 * TODO Refactor to pull out reuseable parts
 ** Cursor movement and other termy, curses type stuff
 ** Make them available as hosted deno modules (on git?)

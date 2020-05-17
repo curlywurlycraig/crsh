@@ -114,8 +114,9 @@ while (true) {
   const processes = [];
 
   for (let index = 0; index < commands.length; index++) {
+    const isFirst = index === 0;
+    const isLast = index === commands.length - 1;
     const command = commands[index];
-
     const trimmed = command.trim();
 
     if (/^\(.*\) ?=> ?.*$/.test(trimmed)) {
@@ -138,9 +139,11 @@ while (true) {
       });
 
       let nextContent;
-      try {
-        nextContent = JSON.stringify(result);
-      } catch {
+      if (result instanceof Array) {
+        nextContent = result.join("\n");
+      } else if (result instanceof Object) {
+        nextContent = JSON.stringify(result, null, 4);
+      } else {
         nextContent = result ? result.toString() : "";
       }
 
@@ -149,6 +152,10 @@ while (true) {
         stderr: new StringReader(),
         stdin: new StringWriter(),
       };
+
+      if (isLast) {
+        Deno.stdout.write(new TextEncoder().encode(nextContent));
+      }
 
       continue;
     }
@@ -188,8 +195,6 @@ while (true) {
 
     try {
       // TODO Support stderr pipes, and also file output
-      const isFirst = index === 0;
-      const isLast = index === commands.length - 1;
       const p = Deno.run({
         cmd: splitCommand,
         stdin: isFirst ? "inherit" : "piped",
@@ -197,7 +202,7 @@ while (true) {
         stderr: isLast ? "inherit" : "piped",
       });
 
-      if (!isFirst && !isLast) {
+      if (!isFirst) {
         const prevOutput = lastIO.stdout;
         const currentInput = p.stdin;
 
@@ -220,8 +225,9 @@ while (true) {
     }
   }
 
-  if (processes[0]) {
-    let status = await processes[0].status();
-    await processes[0].close();
+  for (let i = 0; i < processes.length; i++) {
+    const process = processes[i];
+    await process.status();
+    await process.close();
   }
 }
