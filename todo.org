@@ -6,6 +6,8 @@
 ** Make them available as hosted deno modules (on git?)
 Like can you just have them on git and reference them in deno?
 * TODO Pipe to file
+* TODO Add a readme
+* TODO Pipe into functions (like fetchBody)
 * TODO stderr pipes
 * TODO Async reader triggering of custom functions
 * TODO Improve builtin, function definitions
