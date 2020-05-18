@@ -11,20 +11,12 @@ import {
   reverseControlCharactersBytesMap,
   controlCharactersBytesMap,
 } from "./tty.js";
+import { readAll } from "./readUtil.js";
+import { rewriteLine } from "./input.js";
 
-const readAll = async (reader) => {
-  if (reader === null) return "";
-
-  let lastOutput = "";
-  const bufferedReader = new BufReader(reader);
-  let nextBit = await bufferedReader.readString("\n");
-  while (nextBit !== null) {
-    lastOutput += nextBit;
-    nextBit = await bufferedReader.readString("\n");
-  }
-
-  return lastOutput;
-};
+// TODO Read history from a file
+const history = [];
+let currentHistoryIndex = history.length;
 
 // This sets the terminal to non-canonical mode.
 // That's essential for capturing raw key-presses.
@@ -34,9 +26,9 @@ Deno.setRaw(0, true);
 while (true) {
   await Deno.stdout.write(new TextEncoder().encode(prompt()));
 
-  const reader = new BufReader(Deno.stdin);
-
+  ///////////////
   // Read input
+  ///////////////
   let userInput = "";
   let cursorPosition = 0;
   while (true) {
@@ -55,39 +47,33 @@ while (true) {
       if (cursorPosition === 0) {
         continue;
       }
-      // Remove character before current cursor position
+
       userInput =
         userInput.slice(0, cursorPosition - 1) +
         userInput.slice(cursorPosition, userInput.length);
 
-      // Update cursor position
       cursorPosition--;
 
-      // Erase whole line
-      Deno.stdout.write(
-        Uint8Array.from(reverseControlCharactersBytesMap.eraseLine)
+      const [row, column] = await rewriteLine(
+        Deno.stdin,
+        Deno.stdout,
+        `${prompt()}${userInput}`
       );
 
-      // Get cursor position
-      const [row, column] = await getCursorPosition(Deno.stdout, Deno.stdin);
-
-      // Move cursor to beginning of line
-      setCursorPosition(Deno.stdout, row, 0);
-
-      // Rewrite prompt
-      await Deno.stdout.write(new TextEncoder().encode(prompt()));
-
-      // Rewrite user input
-      await Deno.stdout.write(new TextEncoder().encode(userInput));
-
-      // Move cursor to final position in text
       setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
       continue;
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "up") {
-      // Read history and update print
-      cursorPosition = 0;
+      if (currentHistoryIndex === 0) {
+        continue;
+      }
+
+      currentHistoryIndex--;
+      userInput = history[currentHistoryIndex];
+      cursorPosition = userInput.length;
+
+      await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
       continue;
     }
 
@@ -98,7 +84,6 @@ while (true) {
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "left") {
-      // Read history and update print
       if (cursorPosition === 0) continue;
 
       await Deno.stdout.write(relevantBuf);
@@ -107,7 +92,6 @@ while (true) {
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "right") {
-      // Read history and update print
       if (cursorPosition === userInput.length) continue;
 
       await Deno.stdout.write(relevantBuf);
@@ -115,14 +99,33 @@ while (true) {
       continue;
     }
 
+    // All other text
     const decodedString = new TextDecoder().decode(relevantBuf);
 
-    await Deno.stdout.write(relevantBuf);
+    userInput =
+      userInput.slice(0, cursorPosition) +
+      decodedString +
+      userInput.slice(cursorPosition, userInput.length);
+
     cursorPosition++;
 
-    userInput += decodedString;
+    const [row, column] = await rewriteLine(
+      Deno.stdin,
+      Deno.stdout,
+      `${prompt()}${userInput}`
+    );
+
+    setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
   }
 
+  history.push(userInput);
+  currentHistoryIndex = history.length;
+
+  ///////////
+  // Execute input
+  ///////////
+
+  // TODO Parse more than just "|" (there are other separators! Error pipes, file pipes, etc)
   const commands = userInput.trim().split("|");
 
   if (commands.length === 1 && commands[0] === "") {
