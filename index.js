@@ -9,7 +9,6 @@ import {
   controlCharactersBytesMap,
   rewriteLine,
 } from "./tty.js";
-import { readAll } from "./readUtil.js";
 import { mergeArgsBetweenQuotes } from "./util.js";
 
 // TODO Read history from a file
@@ -145,7 +144,9 @@ while (true) {
     const trimmed = command.trim();
 
     if (/^\(.*\) ?=> ?.*$/.test(trimmed)) {
-      const lastOutput = await readAll(lastIO.stdout);
+      const lastOutput = new TextDecoder().decode(
+        await Deno.readAll(lastIO.stdout)
+      );
 
       let json = undefined;
       try {
@@ -205,7 +206,9 @@ while (true) {
 
     if (builtins[executable] !== undefined) {
       try {
-        const lastOutput = await readAll(lastIO.stdout);
+        const lastOutput = new TextDecoder().decode(
+          await Deno.readAll(lastIO.stdout)
+        );
         const result = await builtins[executable](args, lastOutput);
         const nextContent = result ? result.toString() : "";
         lastIO = {

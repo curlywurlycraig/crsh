@@ -1,4 +1,3 @@
-* TODO cd ~
 * TODO Refactor to pull out reuseable parts
 ** Cursor movement and other termy, curses type stuff
 ** Make them available as hosted deno modules (on git?)
@@ -42,6 +41,7 @@ if (/git checkout -b/.test()) {
 }
 
 * TODO Add tests
+* TODO Use typescript
 
 * Learnings
 
