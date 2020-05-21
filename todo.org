@@ -2,7 +2,6 @@
 * TODO stderr pipes
 * TODO Source a file
 * TODO File redirection (input)
-* TODO Why doesn't running bash from within my shell output keystrokes?
 * TODO Persist history
 * TODO Improve readme
 
