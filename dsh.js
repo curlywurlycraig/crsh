@@ -9,7 +9,7 @@ import {
   controlCharactersBytesMap,
   rewriteLine,
 } from "./tty.js";
-import { mergeArgsBetweenQuotes } from "./util.js";
+import { mergeArgsBetweenQuotes, replaceEnvVars } from "./util.js";
 
 // TODO Read history from a file
 const history = [];
@@ -145,8 +145,9 @@ while (true) {
     const isLast = index === commands.length - 1;
     const command = commands[index];
     const trimmed = command.trim();
+    const withEnvVarsReplaced = replaceEnvVars(trimmed);
 
-    if (/^\(.*\) ?=> ?.*$/.test(trimmed)) {
+    if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
       const lastOutput = new TextDecoder().decode(
         await Deno.readAll(lastIO.stdout)
       );
@@ -163,7 +164,7 @@ while (true) {
       // TODO Capture console logs and other stdout/err writes here.
       // This can be done by somehow setting the stdout for this execution.
       // How can I do that?
-      const func = eval(trimmed);
+      const func = eval(withEnvVarsReplaced);
       const result = func({
         raw: lastOutput,
         lines,
@@ -186,14 +187,14 @@ while (true) {
       };
 
       if (isLast) {
-        Deno.stdout.write(new TextEncoder().encode(nextContent));
+        Deno.stdout.write(new TextEncoder().encode(`${nextContent}\n`));
       }
 
       continue;
     }
 
-    if (/^[a-zA-Z0-9]*\(.*\)$/.test(trimmed)) {
-      const output = await eval(trimmed);
+    if (/^[a-zA-Z0-9]*\(.*\)$/.test(withEnvVarsReplaced)) {
+      const output = await eval(withEnvVarsReplaced);
 
       lastIO = {
         stdout: new StringReader(`${output.toString()}\n`),
@@ -203,7 +204,7 @@ while (true) {
       continue;
     }
 
-    const splitCommand = trimmed.split(" ");
+    const splitCommand = withEnvVarsReplaced.split(" ");
     const executable = splitCommand[0].trim();
     const args = mergeArgsBetweenQuotes(splitCommand.slice(1));
 

@@ -23,3 +23,24 @@ export const mergeArgsBetweenQuotes = (args) =>
 
     return [...prev, curr];
   }, []);
+
+export const replaceEnvVars = (stringInput) => {
+  const envVarRegex = /\$[a-zA-Z0-9]+/g;
+  let matchResults = [];
+  let matchResult = envVarRegex.exec(stringInput);
+  while (matchResult !== null) {
+    matchResults.push(matchResult);
+    matchResult = envVarRegex.exec(stringInput);
+  }
+
+  let result = stringInput;
+  matchResults.forEach((currentMatchResult) => {
+    const envVar = Deno.env.get(currentMatchResult[0].slice(1));
+    result =
+      result.slice(0, currentMatchResult.index) +
+      envVar?.toString() +
+      result.slice(currentMatchResult.index + currentMatchResult[0].length);
+  });
+
+  return result;
+};

@@ -1,10 +1,10 @@
 * TODO Pipe to file
-* TODO Improve readme
-* TODO interpolate env vars (e.g. $HOME)
 * TODO stderr pipes
 * TODO Source a file
+* TODO File redirection (input)
 * TODO Why doesn't running bash from within my shell output keystrokes?
 * TODO Persist history
+* TODO Improve readme
 
 * Everything above this line is for feature parity with existing shells
 
@@ -27,6 +27,7 @@ And other fun stuff
 * TODO Make the indent area a beautiful auto-generated pattern
 * TODO Pipe into functions (like fetchBody)
 * TODO Async reader triggering of custom functions
+This would be extra good combined with reading files as input
 * TODO Improve builtin, function definitions
 * TODO Let the user write functions that span multiple lines
 * TODO Auto completion
