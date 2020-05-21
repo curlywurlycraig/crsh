@@ -20,6 +20,32 @@ let currentHistoryIndex = history.length;
 // It's what allows pressing up to navigate history, for example. Or moving the cursor left
 Deno.setRaw(0, true);
 
+// Rejoin args between "" or ''.
+// Takes a list of tokens, some maybe beginning with a quote.
+// Returns a list of tokens where tokens between quotes are merged into a single
+// arg.
+const mergeArgsBetweenQuotes = (args) =>
+  args.reduce((prev, curr) => {
+    if (curr === null || curr === undefined) {
+      return prev;
+    }
+
+    const last = prev[prev.length - 1];
+    if (last === undefined) {
+      return [...prev, curr];
+    }
+
+    const inDoubleQuotes = last.startsWith(`"`) && !last.endsWith(`"`);
+    const inSingleQuotes = last.startsWith(`'`) && !last.endsWith(`'`);
+    if (prev.length > 0 && (inDoubleQuotes || inSingleQuotes)) {
+      const result = prev.slice(0, prev.length - 1);
+      result.push(`${last} ${curr}`);
+      return result;
+    }
+
+    return [...prev, curr];
+  }, []);
+
 while (true) {
   await Deno.stdout.write(new TextEncoder().encode(prompt()));
 
@@ -201,27 +227,7 @@ while (true) {
     const splitCommand = trimmed.split(" ");
     const executable = splitCommand[0].trim();
 
-    // Rejoin args between "" or ''
-    const args = splitCommand.slice(1).reduce((prev, curr) => {
-      if (curr === null || curr === undefined) {
-        return prev;
-      }
-
-      const last = prev[prev.length - 1];
-      if (last === undefined) {
-        return [...prev, curr];
-      }
-
-      const inDoubleQuotes = last.startsWith(`"`) && !last.endsWith(`"`);
-      const inSingleQuotes = last.startsWith(`'`) && !last.endsWith(`'`);
-      if (prev.length > 0 && (inDoubleQuotes || inSingleQuotes)) {
-        const result = prev.slice(0, prev.length - 1);
-        result.push(`${last} ${curr}`);
-        return result;
-      }
-
-      return [...prev, curr];
-    }, []);
+    const args = mergeArgsBetweenQuotes(splitCommand.slice(1));
 
     if (builtins[executable] !== undefined) {
       try {
