@@ -1,7 +1,7 @@
 export const builtins = {
   exit: () => Deno.exit(0),
   cd: (args) => {
-    const dir = args[0];
+    let dir = args[0];
 
     if (dir === undefined) {
       Deno.env.set("OLDPWD", Deno.cwd());
@@ -12,6 +12,11 @@ export const builtins = {
     if (dir === "-") {
       Deno.chdir(Deno.env.get("OLDPWD"));
       return;
+    }
+
+    if (dir.startsWith("~")) {
+      const homePath = Deno.env.get("HOME");
+      dir = `${homePath}${dir.slice(1)}`;
     }
 
     Deno.env.set("OLDPWD", Deno.cwd());

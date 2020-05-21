@@ -1,7 +1,3 @@
-* TODO Why doesn't git commit -am "thing" work?
-** I think stuff inside quotes needs to be joined as args
-* TODO Why doesn't running bash from within my shell output keystrokes?
-* TODO Add tests
 * TODO cd ~
 * TODO Refactor to pull out reuseable parts
 ** Cursor movement and other termy, curses type stuff
@@ -14,6 +10,7 @@ Like can you just have them on git and reference them in deno?
 * TODO interpolate env vars (e.g. $HOME)
 * TODO stderr pipes
 * TODO Source a file
+* TODO Why doesn't running bash from within my shell output keystrokes?
 
 * Everything above this line is for feature parity with existing shells
 
@@ -43,6 +40,8 @@ if (/git checkout -b/.test()) {
     // perform git branch command
     // auto complete git branch
 }
+
+* TODO Add tests
 
 * Learnings
 
