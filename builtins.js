@@ -17,4 +17,10 @@ export const builtins = {
     Deno.env.set("OLDPWD", Deno.cwd());
     Deno.chdir(dir);
   },
+  export: (args) => {
+    args.forEach((pair) => {
+      const [key, value] = pair.split("=");
+      Deno.env.set(key, value);
+    });
+  },
 };

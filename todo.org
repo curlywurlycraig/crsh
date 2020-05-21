@@ -1,21 +1,41 @@
-* TODO Allow pressing up to search through history
 * TODO Why doesn't git commit -am "thing" work?
 ** I think stuff inside quotes needs to be joined as args
+* TODO Why doesn't running bash from within my shell output keystrokes?
+* TODO Add tests
+* TODO cd ~
 * TODO Refactor to pull out reuseable parts
 ** Cursor movement and other termy, curses type stuff
 ** Make them available as hosted deno modules (on git?)
 Like can you just have them on git and reference them in deno?
+
+* TODO Persist history
 * TODO Pipe to file
-* TODO Add a readme
-* TODO Pipe into functions (like fetchBody)
+* TODO Improve readme
+* TODO interpolate env vars (e.g. $HOME)
 * TODO stderr pipes
+* TODO Source a file
+
+* Everything above this line is for feature parity with existing shells
+
+* TODO Think about how to do js shell logic outside of inline functions
+How to interpolate env vars? Should it just be $HOME or should I do the more js-y ${HOME}?
+
+The above is a good idea because you could also do e.g.:
+touch file${new Date()}.js
+
+touch $HOME/file.js
+
+Here's how I think I can solve this, and also solve "source a file". Define a JS/unix hybrid. Something like this:
+"Any statement that doesn't end in a semi colon should be executed as a unix command.
+Any other statement should be eval'd in Deno."
+
+And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
+
+And other fun stuff
+* TODO Pipe into functions (like fetchBody)
 * TODO Async reader triggering of custom functions
 * TODO Improve builtin, function definitions
 * TODO Let the user write functions that span multiple lines
-* TODO Env vars
-* TODO interpolate env vars (e.g. $HOME)
-* TODO Source a file
-* TODO cd ~
 * TODO Auto completion
 ** Also make it programmable! i.e. complete git branches etc. Maybe have auto complete let you supply a regex
 _example_

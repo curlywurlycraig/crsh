@@ -1,4 +1,3 @@
-import { BufReader, BufWriter } from "https://deno.land/std@0.50.0/io/bufio.ts";
 import { StringReader } from "https://deno.land/std@0.50.0/io/readers.ts";
 import { StringWriter } from "https://deno.land/std@0.50.0/io/writers.ts";
 
@@ -6,13 +5,11 @@ import { prompt } from "./prompt.js";
 import { builtins } from "./builtins.js";
 import { fetchBody } from "./functions.js";
 import {
-  getCursorPosition,
   setCursorPosition,
-  reverseControlCharactersBytesMap,
   controlCharactersBytesMap,
+  rewriteLine,
 } from "./tty.js";
 import { readAll } from "./readUtil.js";
-import { rewriteLine } from "./input.js";
 
 // TODO Read history from a file
 const history = [];
@@ -203,7 +200,28 @@ while (true) {
 
     const splitCommand = trimmed.split(" ");
     const executable = splitCommand[0].trim();
-    const args = splitCommand.slice(1);
+
+    // Rejoin args between "" or ''
+    const args = splitCommand.slice(1).reduce((prev, curr) => {
+      if (curr === null || curr === undefined) {
+        return prev;
+      }
+
+      const last = prev[prev.length - 1];
+      if (last === undefined) {
+        return [...prev, curr];
+      }
+
+      const inDoubleQuotes = last.startsWith(`"`) && !last.endsWith(`"`);
+      const inSingleQuotes = last.startsWith(`'`) && !last.endsWith(`'`);
+      if (prev.length > 0 && (inDoubleQuotes || inSingleQuotes)) {
+        const result = prev.slice(0, prev.length - 1);
+        result.push(`${last} ${curr}`);
+        return result;
+      }
+
+      return [...prev, curr];
+    }, []);
 
     if (builtins[executable] !== undefined) {
       try {
@@ -226,7 +244,7 @@ while (true) {
     try {
       // TODO Support stderr pipes, and also file output
       const p = Deno.run({
-        cmd: splitCommand,
+        cmd: [executable, ...args],
         stdin: isFirst ? "inherit" : "piped",
         stdout: isLast ? "inherit" : "piped",
         stderr: isLast ? "inherit" : "piped",
