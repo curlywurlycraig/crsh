@@ -15,12 +15,12 @@ import { mergeArgsBetweenQuotes } from "./util.js";
 const history = [];
 let currentHistoryIndex = history.length;
 
-// This sets the terminal to non-canonical mode.
-// That's essential for capturing raw key-presses.
-// It's what allows pressing up to navigate history, for example. Or moving the cursor left
-Deno.setRaw(0, true);
-
 while (true) {
+  // This sets the terminal to non-canonical mode.
+  // That's essential for capturing raw key-presses.
+  // It's what allows pressing up to navigate history, for example. Or moving the cursor left
+  Deno.setRaw(0, true);
+
   await Deno.stdout.write(new TextEncoder().encode(prompt()));
 
   ///////////////
@@ -115,8 +115,8 @@ while (true) {
     setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
   }
 
-  history.push(userInput);
-  currentHistoryIndex = history.length;
+  // Disable raw mode while routing stdin to sub-processes.
+  Deno.setRaw(0, false);
 
   ///////////
   // Execute input
@@ -128,6 +128,9 @@ while (true) {
   if (commands.length === 1 && commands[0] === "") {
     continue;
   }
+
+  history.push(userInput);
+  currentHistoryIndex = history.length;
 
   let lastIO = {
     stdin: new StringWriter(),
