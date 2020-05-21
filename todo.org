@@ -4,6 +4,7 @@
 * TODO File redirection (input)
 * TODO Persist history
 * TODO Improve readme
+* TODO Better error handling (don't crash ever)
 
 * Everything above this line is for feature parity with existing shells
 
@@ -24,6 +25,9 @@ And if I start a new scope, a newline should not yet execute the command, and sh
 And other fun stuff
 * TODO Fuzzyfinder
 * TODO Make the indent area a beautiful auto-generated pattern
+* TODO Autocompletion
+* TODO Surface JS syntax errors while writing
+* TODO Shortcut to re-run current JS snippet with previous output and show result
 * TODO Pipe into functions (like fetchBody)
 * TODO Async reader triggering of custom functions
 This would be extra good combined with reading files as input
