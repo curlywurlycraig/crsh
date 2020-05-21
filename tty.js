@@ -40,6 +40,8 @@ export const setCursorPosition = (stdout, row, column) => {
 // Cursor ends up at the end of the new line. Remember to reposition after!
 export const rewriteLine = async (stdin, stdout, text) => {
   // Erase whole line
+  // TODO Erase more carefully to avoid flicker. No need to remove the whole line.
+  // Just write over!
   stdout.write(Uint8Array.from(reverseControlCharactersBytesMap.eraseLine));
 
   // Get cursor position
