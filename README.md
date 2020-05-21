@@ -16,6 +16,13 @@ functions.js
 And inline anonymous functions will be familiar to those who have used Javascript:
 
 ```
+$ () => "Hello world!"
+Hello world!
+```
+
+Combining these concepts can yield a very expressive shell:
+
+```
 $ ls | ({ lines }) => lines.map((line, index) => `line ${index}: ${line}`)
 line 0: README.md
 line 1: builtins.js
