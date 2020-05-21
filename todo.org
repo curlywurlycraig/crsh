@@ -24,6 +24,7 @@ And if I start a new scope, a newline should not yet execute the command, and sh
 
 And other fun stuff
 * TODO Fuzzyfinder
+* TODO Make the indent area a beautiful auto-generated pattern
 * TODO Pipe into functions (like fetchBody)
 * TODO Async reader triggering of custom functions
 * TODO Improve builtin, function definitions
