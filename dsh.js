@@ -164,43 +164,52 @@ while (true) {
       // TODO Capture console logs and other stdout/err writes here.
       // This can be done by somehow setting the stdout for this execution.
       // How can I do that?
-      const func = eval(withEnvVarsReplaced);
-      const result = func({
-        raw: lastOutput,
-        lines,
-        json,
-      });
+      try {
+        const func = eval(withEnvVarsReplaced);
+        const result = func({
+          raw: lastOutput,
+          lines,
+          json,
+        });
 
-      let nextContent;
-      if (result instanceof Array) {
-        nextContent = result.join("\n");
-      } else if (result instanceof Object) {
-        nextContent = JSON.stringify(result, null, 4);
-      } else {
-        nextContent = result ? result.toString() : "";
-      }
+        let nextContent;
+        if (result instanceof Array) {
+          nextContent = result.join("\n");
+        } else if (result instanceof Object) {
+          nextContent = JSON.stringify(result, null, 4);
+        } else {
+          nextContent = result ? result.toString() : "";
+        }
 
-      lastIO = {
-        stdout: new StringReader(`${nextContent}\n`),
-        stderr: new StringReader(),
-        stdin: new StringWriter(),
-      };
+        lastIO = {
+          stdout: new StringReader(`${nextContent}\n`),
+          stderr: new StringReader(),
+          stdin: new StringWriter(),
+        };
 
-      if (isLast) {
-        Deno.stdout.write(new TextEncoder().encode(`${nextContent}\n`));
+        if (isLast) {
+          Deno.stdout.write(new TextEncoder().encode(`${nextContent}\n`));
+        }
+      } catch (err) {
+        console.error(`Failed to execute command: ${err.toString()}`);
       }
 
       continue;
     }
 
     if (/^[a-zA-Z0-9]*\(.*\)$/.test(withEnvVarsReplaced)) {
-      const output = await eval(withEnvVarsReplaced);
+      try {
+        const output = await eval(withEnvVarsReplaced);
 
-      lastIO = {
-        stdout: new StringReader(`${output.toString()}\n`),
-        stderr: new StringReader(),
-        stdin: new StringWriter(),
-      };
+        lastIO = {
+          stdout: new StringReader(`${output.toString()}\n`),
+          stderr: new StringReader(),
+          stdin: new StringWriter(),
+        };
+      } catch (err) {
+        console.error(`Failed to execute command: ${err.toString()}`);
+      }
+
       continue;
     }
 
@@ -256,6 +265,8 @@ while (true) {
       //   console.debug("err is this ", err);
       if (err instanceof Deno.errors.NotFound) {
         console.error(`Couldn't find command "${executable}"`);
+      } else {
+        console.error(`Failed to execute command: ${err.toString()}`);
       }
     }
   }
