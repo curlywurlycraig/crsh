@@ -47,6 +47,15 @@ My Neighbor Totoro
 $
 ```
 
+File output redirection works as usual:
+
+```
+$ curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.title > ghibli_titles.txt
+$ cat ghibli_titles.txt
+My Neighbor Totoro
+$
+```
+
 # Installation
 TODO
 

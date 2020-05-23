@@ -4,6 +4,7 @@
 * TODO Persist history
 * TODO Improve readme
 * TODO Better error handling (don't crash ever)
+* TODO * globbing e.g. rm *.txt
 
 * Everything above this line is for feature parity with existing shells
 

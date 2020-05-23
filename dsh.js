@@ -77,9 +77,10 @@ while (true) {
         };
 
         if (isLast && outputFile === null) {
-          Deno.stdout.write(new TextEncoder().encode(`${nextContent}\n`));
+          await Deno.stdout.write(new TextEncoder().encode(`${nextContent}\n`));
         } else if (isLast && outputFile !== null) {
-          outputFile.write(new TextEncoder().encode(`${nextContent}\n`));
+          await outputFile.write(new TextEncoder().encode(`${nextContent}\n`));
+          await outputFile.close();
         }
       } catch (err) {
         console.error(`Failed to execute command: ${err.toString()}`);
@@ -132,6 +133,7 @@ while (true) {
       if (isLast && outputFile !== null) {
         await Deno.copy(p.stdout, outputFile);
         await p.stdout?.close();
+        await outputFile.close();
       }
 
       lastIO = {
@@ -155,9 +157,5 @@ while (true) {
     const process = processes[i];
     await process.status();
     await process.close();
-
-    if (outputFile !== null) {
-      await outputFile.close();
-    }
   }
 }
