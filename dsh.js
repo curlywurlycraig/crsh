@@ -3,9 +3,11 @@ import { StringWriter } from "https://deno.land/std@0.50.0/io/writers.ts";
 
 import { builtins } from "./builtins.js";
 import { readCommand } from "./tty.js";
-import { mergeArgsBetweenQuotes, replaceEnvVars } from "./util.js";
-
-const evalScope = {};
+import {
+  mergeArgsBetweenQuotes,
+  replaceEnvVars,
+  evalAndInterpolateJS,
+} from "./util.js";
 
 while (true) {
   const userInput = await readCommand();
@@ -13,7 +15,8 @@ while (true) {
 
   if (userInput.endsWith(";")) {
     try {
-      const result = Function(userInput).bind(evalScope)();
+      const result = Function(`return ${userInput}`)();
+      console.log(result);
     } catch (err) {
       console.error(err.toString());
     }
@@ -47,7 +50,7 @@ while (true) {
     const isLast = index === commands.length - 1;
     const command = commands[index];
     const trimmed = command.trim();
-    const withEnvVarsReplaced = replaceEnvVars(trimmed);
+    const withEnvVarsReplaced = evalAndInterpolateJS(replaceEnvVars(trimmed));
 
     if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
       const lastOutput = new TextDecoder().decode(
@@ -67,7 +70,7 @@ while (true) {
       // This can be done by somehow setting the stdout for this execution.
       // How can I do that?
       try {
-        const func = eval(`(${withEnvVarsReplaced}).bind(evalScope)`);
+        const func = eval(withEnvVarsReplaced);
         const result = func({
           raw: lastOutput,
           lines,

@@ -23,7 +23,7 @@ Hello world!
 Returning a list from an inline function will be outputted as separate lines:
 
 
-```
+```js
 $ () => new Array(5).fill().map((line, index) => `Line ${index}`)
 Line 0
 Line 1
@@ -67,6 +67,38 @@ File output redirection works as usual:
 $ curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.title > ghibli_titles.txt
 $ cat ghibli_titles.txt
 My Neighbor Totoro
+```
+
+Javascript can be directly evalated by terminating a command with a semi-colon:
+
+```js
+$ a = 10 * 5;
+$ console.log(a);
+50
+```
+
+Note that we don't use `let` or `const`: lines are evaluated in their own scope, so declarations are global. This means they can be read inside inline functions:
+
+```js
+$ a = 10 * 5;
+$ () => `a is: ${a}`
+a is: 50
+```
+
+Variables can also be interpolated in commands:
+
+```js
+$ touch file_${a}.js
+$ ls
+file_50.js
+```
+
+Similarly, env vars can be accessed in a familiar way:
+
+```
+$ export TEST=value
+$ echo $TEST
+value
 ```
 
 # Installation
