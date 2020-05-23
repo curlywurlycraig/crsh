@@ -76,7 +76,7 @@ export const readCommand = async () => {
   let cursorPosition = 0;
 
   while (true) {
-    const buf = new Uint8Array(100);
+    const buf = new Uint8Array(256);
     const numberOfBytesRead = await Deno.stdin.read(buf);
     const relevantBuf = buf.slice(0, numberOfBytesRead);
 

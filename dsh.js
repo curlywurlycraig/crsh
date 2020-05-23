@@ -50,13 +50,7 @@ while (true) {
     const isLast = index === commands.length - 1;
     const command = commands[index];
     const trimmed = command.trim();
-    let withEnvVarsReplaced;
-    try {
-      withEnvVarsReplaced = evalAndInterpolateJS(replaceEnvVars(trimmed));
-    } catch (err) {
-      console.error("Failed to interpolate JS: ", err.toString());
-      continue;
-    }
+    const withEnvVarsReplaced = replaceEnvVars(trimmed);
 
     if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
       const lastOutput = new TextDecoder().decode(
@@ -65,6 +59,7 @@ while (true) {
 
       let json = undefined;
       try {
+        // TODO Try to parse as e.g. multiple json blobs.
         json = JSON.parse(lastOutput.trim());
       } catch (err) {
       } finally {
@@ -111,7 +106,14 @@ while (true) {
       continue;
     }
 
-    const splitCommand = withEnvVarsReplaced.split(" ");
+    let withInterpolatedJS;
+    try {
+      withInterpolatedJS = evalAndInterpolateJS(withEnvVarsReplaced);
+    } catch (err) {
+      console.error("Failed to interpolate JS: ", err.toString());
+      continue;
+    }
+    const splitCommand = withInterpolatedJS.split(" ");
     const executable = splitCommand[0].trim();
     const args = mergeArgsBetweenQuotes(splitCommand.slice(1));
 

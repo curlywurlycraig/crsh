@@ -1,9 +1,18 @@
 * TODO stderr pipes
+* TODO What's going on here:
+
+/Users/craig/Documents/projects/deno_shell › console.log(this); | less
+Couldn't find command "console.log(this);"
+
 * TODO File redirection (input)
 * TODO Persist history
 * TODO Improve readme
 * TODO Better error handling (don't crash ever)
 * TODO * globbing e.g. rm *.txt
+* TODO Implement delete
+* TODO Move cursor to the end of the line when pasting
+* TODO Try to sandbox eval's
+* TODO Support multiline
 
 * Everything above this line is for feature parity with existing shells
 
