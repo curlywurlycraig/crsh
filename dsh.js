@@ -12,7 +12,7 @@ while (true) {
   // TODO Parse more than just "|" (there are other separators! Error pipes, file pipes, etc)
   const [rawCommands, outputFilename] = userInput
     .trim()
-    .split(">")
+    .split(" >")
     .map((untrimmed) => untrimmed.trim());
 
   const commands = rawCommands.split("|");
@@ -129,9 +129,10 @@ while (true) {
         await p.stdin.close();
       }
 
-      // if (isLast && outputFile !== null) {
-      //   Deno.copy();
-      // }
+      if (isLast && outputFile !== null) {
+        await Deno.copy(p.stdout, outputFile);
+        await p.stdout?.close();
+      }
 
       lastIO = {
         stdout: p.stdout,
@@ -154,5 +155,9 @@ while (true) {
     const process = processes[i];
     await process.status();
     await process.close();
+
+    if (outputFile !== null) {
+      await outputFile.close();
+    }
   }
 }
