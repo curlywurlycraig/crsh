@@ -1,4 +1,3 @@
-* TODO What's going on with quotes when making git commits?
 * TODO stderr pipes
 * TODO File redirection (input)
 * TODO Persist history
@@ -21,7 +20,6 @@ And if I start a new scope, a newline should not yet execute the command, and sh
 * TODO Autocompletion
 * TODO Surface JS syntax errors while writing
 * TODO Shortcut to re-run current JS snippet with previous output and show result
-* TODO Pipe into functions (like fetchBody)
 * TODO Async reader triggering of custom functions
 This would be extra good combined with reading files as input
 * TODO Improve builtin, function definitions
