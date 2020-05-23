@@ -73,6 +73,7 @@ Javascript can be directly evalated by terminating a command with a semi-colon:
 
 ```js
 $ a = 10 * 5;
+50
 $ console.log(a);
 50
 ```
@@ -81,6 +82,7 @@ Note that we don't use `let` or `const`: lines are evaluated in their own scope,
 
 ```js
 $ a = 10 * 5;
+50
 $ () => `a is: ${a}`
 a is: 50
 ```
@@ -91,6 +93,8 @@ Variables can also be interpolated in commands:
 $ touch file_${a}.js
 $ ls
 file_50.js
+$ echo ${a}
+50
 ```
 
 Similarly, env vars can be accessed in a familiar way:
