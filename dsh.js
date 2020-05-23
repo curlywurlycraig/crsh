@@ -5,9 +5,22 @@ import { builtins } from "./builtins.js";
 import { readCommand } from "./tty.js";
 import { mergeArgsBetweenQuotes, replaceEnvVars } from "./util.js";
 
+const evalScope = {};
+
 while (true) {
   const userInput = await readCommand();
   if (userInput.length === 0) continue;
+
+  if (userInput.endsWith(";")) {
+    try {
+      const result = Function(userInput).bind(evalScope)();
+    } catch (err) {
+      console.error(err.toString());
+    }
+    continue;
+  }
+
+  // Running as non semi-colon func.
 
   // TODO Parse more than just "|" (there are other separators! Error pipes, file pipes, etc)
   const [rawCommands, outputFilename] = userInput
@@ -54,7 +67,7 @@ while (true) {
       // This can be done by somehow setting the stdout for this execution.
       // How can I do that?
       try {
-        const func = eval(withEnvVarsReplaced);
+        const func = eval(`(${withEnvVarsReplaced}).bind(evalScope)`);
         const result = func({
           raw: lastOutput,
           lines,
