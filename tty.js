@@ -60,7 +60,7 @@ export const rewriteLine = async (stdin, stdout, text) => {
 
 // TODO Read history from a file
 const history = [];
-let currentHistoryIndex = history.length - 1;
+let currentHistoryIndex = history.length;
 
 export const readCommand = async () => {
   // This sets the terminal to non-canonical mode.
@@ -120,12 +120,15 @@ export const readCommand = async () => {
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "down") {
-      if (currentHistoryIndex === history.length - 1) {
+      if (currentHistoryIndex === history.length) {
         continue;
       }
 
       currentHistoryIndex++;
-      userInput = history[currentHistoryIndex];
+      userInput =
+        currentHistoryIndex === history.length
+          ? ""
+          : history[currentHistoryIndex];
       cursorPosition = userInput.length;
 
       await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
