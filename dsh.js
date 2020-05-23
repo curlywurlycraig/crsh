@@ -50,7 +50,13 @@ while (true) {
     const isLast = index === commands.length - 1;
     const command = commands[index];
     const trimmed = command.trim();
-    const withEnvVarsReplaced = evalAndInterpolateJS(replaceEnvVars(trimmed));
+    let withEnvVarsReplaced;
+    try {
+      withEnvVarsReplaced = evalAndInterpolateJS(replaceEnvVars(trimmed));
+    } catch (err) {
+      console.error("Failed to interpolate JS: ", err.toString());
+      continue;
+    }
 
     if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
       const lastOutput = new TextDecoder().decode(
