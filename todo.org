@@ -1,6 +1,5 @@
 * TODO Pipe to file
 * TODO stderr pipes
-* TODO Source a file
 * TODO File redirection (input)
 * TODO Persist history
 * TODO Improve readme
@@ -23,6 +22,7 @@ Any other statement should be eval'd in Deno."
 And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
 
 And other fun stuff
+* TODO Source a file
 * TODO Fuzzyfinder
 * TODO Make the indent area a beautiful auto-generated pattern
 * TODO Autocompletion

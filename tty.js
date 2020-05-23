@@ -1,3 +1,5 @@
+import { prompt } from "./prompt.js";
+
 // Extremely helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
 export const controlCharactersBytesMap = {
   "13": "return",
@@ -54,4 +56,117 @@ export const rewriteLine = async (stdin, stdout, text) => {
   await stdout.write(new TextEncoder().encode(text));
 
   return [row, column];
+};
+
+// TODO Read history from a file
+const history = [];
+let currentHistoryIndex = history.length;
+
+export const readCommand = async () => {
+  // This sets the terminal to non-canonical mode.
+  // That's essential for capturing raw key-presses.
+  // It's what allows pressing up to navigate history, for example. Or moving the cursor left
+  Deno.setRaw(0, true);
+
+  await Deno.stdout.write(new TextEncoder().encode(prompt()));
+
+  let userInput = "";
+  let cursorPosition = 0;
+
+  while (true) {
+    const buf = new Uint8Array(100);
+    const numberOfBytesRead = await Deno.stdin.read(buf);
+    const relevantBuf = buf.slice(0, numberOfBytesRead);
+
+    // console.debug("got ", buf.slice(0, numberOfBytesRead));
+
+    if (controlCharactersBytesMap[relevantBuf] === "return") {
+      await Deno.stdout.write(new TextEncoder().encode("\n"));
+      break;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "backspace") {
+      if (cursorPosition === 0) {
+        continue;
+      }
+
+      userInput =
+        userInput.slice(0, cursorPosition - 1) +
+        userInput.slice(cursorPosition, userInput.length);
+
+      cursorPosition--;
+
+      const [row, column] = await rewriteLine(
+        Deno.stdin,
+        Deno.stdout,
+        `${prompt()}${userInput}`
+      );
+
+      setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "up") {
+      if (currentHistoryIndex === 0) {
+        continue;
+      }
+
+      currentHistoryIndex--;
+      userInput = history[currentHistoryIndex];
+      cursorPosition = userInput.length;
+
+      await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "down") {
+      // Read history and update print
+      cursorPosition = 0;
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "left") {
+      if (cursorPosition === 0) continue;
+
+      await Deno.stdout.write(relevantBuf);
+      cursorPosition--;
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "right") {
+      if (cursorPosition === userInput.length) continue;
+
+      await Deno.stdout.write(relevantBuf);
+      cursorPosition++;
+      continue;
+    }
+
+    // All other text
+    const decodedString = new TextDecoder().decode(relevantBuf);
+
+    userInput =
+      userInput.slice(0, cursorPosition) +
+      decodedString +
+      userInput.slice(cursorPosition, userInput.length);
+
+    cursorPosition++;
+
+    const [row, column] = await rewriteLine(
+      Deno.stdin,
+      Deno.stdout,
+      `${prompt()}${userInput}`
+    );
+
+    setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
+  }
+
+  // Disable raw mode while routing stdin to sub-processes.
+  Deno.setRaw(0, false);
+
+  if (userInput.length > 0) {
+    history.push(userInput);
+    currentHistoryIndex = history.length;
+  }
+
+  return userInput;
 };

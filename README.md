@@ -20,25 +20,38 @@ $ () => "Hello world!"
 Hello world!
 ```
 
+Returning a list from a JS function will be outputted as separate lines:
+
+
+```
+$ () => new Array(5).fill().map((line, index) => `Line ${index}`)
+Line 0
+Line 1
+Line 2
+Line 3
+Line 4
+```
+
 Combining these concepts can yield a very expressive shell:
 
 ```
-$ ls | ({ lines }) => lines.map((line, index) => `line ${index}: ${line}`)
-line 0: README.md
-line 1: builtins.js
-line 2: dsh.js
+$ ls | ({ lines }) => lines.map((line, index) => `line ${index}: ${line}`) | grep line 3
 line 3: functions.js
-line 4: prompt.js
-line 5: todo.org
-line 6: tty.js
-line 7: util.js
+```
+
+JSON output piped into a JS function is automatically parsed and made available as a `json` parameter:
+
+```
+$ curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.title
+My Neighbor Totoro
+$
 ```
 
 # Installation
 TODO
 
 # Running
-`deno run --allow-run --allow-read --allow-net --allow-env --unstable dsh.js`
+`deno run --allow-run --allow-read --allow-write --allow-net --allow-env --unstable dsh.js`
 
 # Example command
-`fetchBody('https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49') | ({ json }) => json.locations`
+`curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.locations`
