@@ -2,27 +2,35 @@
 // Takes a list of tokens, some maybe beginning with a quote.
 // Returns a list of tokens where tokens between quotes are merged into a single
 // arg.
+// The surrounding quotes are removed.
 export const mergeArgsBetweenQuotes = (args) =>
-  args.reduce((prev, curr) => {
-    if (curr === null || curr === undefined) {
-      return prev;
-    }
+  args
+    .reduce((prev, curr) => {
+      if (curr === null || curr === undefined) {
+        return prev;
+      }
 
-    const last = prev[prev.length - 1];
-    if (last === undefined) {
+      const last = prev[prev.length - 1];
+      if (last === undefined) {
+        return [...prev, curr];
+      }
+
+      const inDoubleQuotes = last.startsWith(`"`) && !last.endsWith(`"`);
+      const inSingleQuotes = last.startsWith(`'`) && !last.endsWith(`'`);
+      if (prev.length > 0 && (inDoubleQuotes || inSingleQuotes)) {
+        const result = prev.slice(0, prev.length - 1);
+        result.push(`${last} ${curr}`);
+        return result;
+      }
+
       return [...prev, curr];
-    }
-
-    const inDoubleQuotes = last.startsWith(`"`) && !last.endsWith(`"`);
-    const inSingleQuotes = last.startsWith(`'`) && !last.endsWith(`'`);
-    if (prev.length > 0 && (inDoubleQuotes || inSingleQuotes)) {
-      const result = prev.slice(0, prev.length - 1);
-      result.push(`${last} ${curr}`);
-      return result;
-    }
-
-    return [...prev, curr];
-  }, []);
+    }, [])
+    .map((arg) =>
+      (arg.startsWith('"') && arg.endsWith('"')) ||
+      (arg.startsWith("'") && arg.endsWith("'"))
+        ? arg.slice(1, arg.length - 1)
+        : arg
+    );
 
 export const replaceEnvVars = (stringInput) => {
   const envVarRegex = /\$[a-zA-Z0-9]+/g;

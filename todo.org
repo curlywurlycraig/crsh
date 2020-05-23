@@ -1,3 +1,4 @@
+* TODO What's going on with quotes when making git commits?
 * TODO stderr pipes
 * TODO File redirection (input)
 * TODO Persist history
@@ -7,22 +8,14 @@
 
 * Everything above this line is for feature parity with existing shells
 
-* TODO Think about how to do js shell logic outside of inline functions
-How to interpolate env vars? Should it just be $HOME or should I do the more js-y ${HOME}?
-
-The above is a good idea because you could also do e.g.:
-touch file${new Date()}.js
-
-touch $HOME/file.js
-
-Here's how I think I can solve this, and also solve "source a file". Define a JS/unix hybrid. Something like this:
+And other fun stuff
+* TODO Source a file
+Define a JS/unix hybrid. Something like this:
 "Any statement that doesn't end in a semi colon should be executed as a unix command.
 Any other statement should be eval'd in Deno."
 
 And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
 
-And other fun stuff
-* TODO Source a file
 * TODO Fuzzyfinder
 * TODO Make the indent area a beautiful auto-generated pattern
 * TODO Autocompletion
