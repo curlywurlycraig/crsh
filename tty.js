@@ -1,7 +1,9 @@
 import { prompt } from "./prompt.js";
 
-// Extremely helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
+// Helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
 export const controlCharactersBytesMap = {
+  "3": "ctrlc",
+  "4": "ctrld",
   "13": "return",
   "127": "backspace",
   "27,91,68": "left",
@@ -79,6 +81,23 @@ export const readCommand = async () => {
     const relevantBuf = buf.slice(0, numberOfBytesRead);
 
     // console.debug("got ", buf.slice(0, numberOfBytesRead));
+
+    if (controlCharactersBytesMap[relevantBuf] === "ctrld") {
+      Deno.exit(0);
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "ctrlc") {
+      userInput = "";
+      cursorPosition = 0;
+
+      const [row, column] = await rewriteLine(
+        Deno.stdin,
+        Deno.stdout,
+        `${prompt()}${userInput}`
+      );
+
+      continue;
+    }
 
     if (controlCharactersBytesMap[relevantBuf] === "return") {
       await Deno.stdout.write(new TextEncoder().encode("\n"));
