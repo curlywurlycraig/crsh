@@ -20,7 +20,7 @@ $ () => "Hello world!"
 Hello world!
 ```
 
-Returning a list from a JS function will be outputted as separate lines:
+Returning a list from an inline function will be outputted as separate lines:
 
 
 ```
@@ -39,12 +39,26 @@ $ ls | ({ lines }) => lines.map((line, index) => `line ${index}: ${line}`) | gre
 line 3: functions.js
 ```
 
-JSON output piped into a JS function is automatically parsed and made available as a `json` parameter:
+Note in the above that `lines` is made available to piped inline functions.
+
+JSON output piped into an inline function is automatically parsed and made available as a `json` parameter:
 
 ```
 $ curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.title
 My Neighbor Totoro
-$
+```
+
+Raw output is also available:
+
+```
+$ ls | ({ raw }) => raw
+README.md
+builtins.js
+dsh.js
+prompt.js
+todo.org
+tty.js
+util.js
 ```
 
 File output redirection works as usual:
@@ -53,7 +67,6 @@ File output redirection works as usual:
 $ curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.title > ghibli_titles.txt
 $ cat ghibli_titles.txt
 My Neighbor Totoro
-$
 ```
 
 # Installation
