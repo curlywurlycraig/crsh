@@ -198,7 +198,7 @@ export const readCommand = async () => {
       decodedString +
       userInput.slice(cursorPosition, userInput.length);
 
-    cursorPosition++;
+    cursorPosition += decodedString.length;
 
     const [row, column] = await rewriteLine(
       Deno.stdin,

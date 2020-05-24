@@ -1,11 +1,19 @@
-* TODO Implement delete
-* TODO stderr pipes
-* TODO File redirection (input)
+* TODO * globbing e.g. rm *.txt
+* TODO Manage resources/resource IDs.
+
+Do this in a more Deno way than bash way. Think of resources over file descriptors.
+
+** Maybe a more readable way too.
+
+Always left to right?
+
+Cases: stdout, in, err, files
+
+Just trying some stuff out.
+
 * TODO Persist history
 * TODO Improve readme
 * TODO Better error handling (don't crash ever)
-* TODO * globbing e.g. rm *.txt
-* TODO Move cursor to the end of the line when pasting
 * TODO Try to sandbox eval's
 * TODO Support multiline
 * TODO Background jobs
