@@ -12,6 +12,7 @@ export const controlCharactersBytesMap = {
   "27,91,66": "down",
   "27,91,70": "end",
   "27,91,72": "home",
+  "27,91,51,126": "delete",
 };
 
 export const reverseControlCharactersBytesMap = {
@@ -114,6 +115,25 @@ export const readCommand = async () => {
         userInput.slice(cursorPosition, userInput.length);
 
       cursorPosition--;
+
+      const [row, column] = await rewriteLine(
+        Deno.stdin,
+        Deno.stdout,
+        `${prompt()}${userInput}`
+      );
+
+      setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "delete") {
+      if (cursorPosition === userInput.length) {
+        continue;
+      }
+
+      userInput =
+        userInput.slice(0, cursorPosition) +
+        userInput.slice(cursorPosition + 1, userInput.length);
 
       const [row, column] = await rewriteLine(
         Deno.stdin,

@@ -23,8 +23,6 @@ while (true) {
     continue;
   }
 
-  // Running as non semi-colon func.
-
   // TODO Parse more than just "|" (there are other separators! Error pipes, file pipes, etc)
   const [rawCommands, outputFilename] = userInput
     .trim()
