@@ -29,3 +29,9 @@ export const builtins = {
     });
   },
 };
+
+export const defaultExtraUnixArgs = {
+  ls: (args) => {
+    return ["-G", ...args];
+  },
+};

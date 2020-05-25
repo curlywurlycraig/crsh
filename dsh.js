@@ -1,13 +1,15 @@
 import { StringReader } from "https://deno.land/std@0.50.0/io/readers.ts";
 import { StringWriter } from "https://deno.land/std@0.50.0/io/writers.ts";
 
-import { builtins } from "./builtins.js";
+import { builtins, defaultExtraUnixArgs } from "./builtins.js";
 import { readCommand } from "./tty.js";
 import {
   mergeArgsBetweenQuotes,
   replaceEnvVars,
   evalAndInterpolateJS,
+  expandGlobs,
 } from "./util.js";
+import { exec } from "./processes.js";
 
 while (true) {
   const userInput = await readCommand();
@@ -49,6 +51,7 @@ while (true) {
     const command = commands[index];
     const trimmed = command.trim();
     const withEnvVarsReplaced = replaceEnvVars(trimmed);
+    const withGlobsExpanded = expandGlobs(withEnvVarsReplaced);
 
     if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
       const lastOutput = new TextDecoder().decode(
@@ -113,7 +116,7 @@ while (true) {
     }
     const splitCommand = withInterpolatedJS.split(" ");
     const executable = splitCommand[0].trim();
-    const args = mergeArgsBetweenQuotes(splitCommand.slice(1));
+    let args = mergeArgsBetweenQuotes(splitCommand.slice(1));
 
     if (builtins[executable] !== undefined) {
       try {
@@ -136,6 +139,10 @@ while (true) {
     }
 
     try {
+      if (defaultExtraUnixArgs[executable] !== undefined) {
+        args = defaultExtraUnixArgs[executable](args);
+      }
+
       // TODO Support stderr pipes, and also file output
       const p = Deno.run({
         cmd: [executable, ...args],

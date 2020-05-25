@@ -71,3 +71,23 @@ export const evalAndInterpolateJS = (stringInput) => {
 
   return result;
 };
+
+export const expandGlobs = (stringInput) => {
+  // Find unescaped asterisks
+  return stringInput; // TODO
+  const globRegex = /[^\\ ]*\*[^ \*]/g;
+
+  let result = stringInput;
+
+  let matchResult = evalRegex.exec(result);
+  while (matchResult !== null) {
+    const matchString = matchResult[0].slice(2, matchResult[0].length - 1);
+    const evalResult = Function(`return (${matchString})`)();
+    result = result.replace(matchResult[0], evalResult);
+
+    matchResult = evalRegex.exec(result);
+  }
+  // Replace the result in the command
+
+  return result;
+};
