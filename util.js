@@ -84,7 +84,6 @@ export const expandGlobs = async (stringInput) => {
   let matchResult = globRegex.exec(stringInput);
 
   while (matchResult !== null) {
-    // TODO Support globbing of e.g. *.js
     const globToken = matchResult[0];
     const globIndex = matchResult.index;
 
