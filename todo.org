@@ -17,6 +17,7 @@ Just trying some stuff out
 * TODO Try to sandbox eval's
 * TODO Support multiline
 * TODO Background jobs
+* TODO Alt + Left / Right
 * TODO Fancier globs
 e.g.
 
