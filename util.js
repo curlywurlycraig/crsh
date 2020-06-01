@@ -76,7 +76,7 @@ export const evalAndInterpolateJS = (stringInput) => {
 
 export const expandGlobs = async (stringInput) => {
   // Find unescaped asterisks
-  const globRegex = /[^\\ ]*\*[^ \*]?/g;
+  const globRegex = /[^\\ ]*\*[^ \*]*/g;
 
   let result = stringInput;
 
@@ -84,16 +84,26 @@ export const expandGlobs = async (stringInput) => {
   let matchResult = globRegex.exec(stringInput);
 
   while (matchResult !== null) {
-    // TODO Cover things like "../*" "*.extension" "../*.extension"
-    //      Probably do that by splitting into the dir portion + filename portion
-    let filesInCurrentDir = [];
-    for await (const dirEntry of Deno.readDir(".")) {
-      filesInCurrentDir.push(dirEntry.name);
-    }
-
-    // Replace glob with list of dirs
+    // TODO Support globbing of e.g. *.js
     const globToken = matchResult[0];
     const globIndex = matchResult.index;
+
+    let dir = ".";
+    if (globToken.includes("/")) {
+      dir = globToken.slice(0, globToken.lastIndexOf("/"));
+    }
+
+    let suffix = globToken.slice(globToken.indexOf("*") + 1);
+
+    let filesInCurrentDir = [];
+    for await (const dirEntry of Deno.readDir(dir)) {
+      const fileName = dir === "." ? dirEntry.name : `${dir}/${dirEntry.name}`;
+
+      if (fileName.endsWith(suffix)) {
+        filesInCurrentDir.push(fileName);
+      }
+    }
+
     result =
       result.slice(0, globIndex) +
       filesInCurrentDir.join(" ") +
