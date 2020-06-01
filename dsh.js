@@ -51,7 +51,6 @@ while (true) {
     const command = commands[index];
     const trimmed = command.trim();
     const withEnvVarsReplaced = replaceEnvVars(trimmed);
-    const withGlobsExpanded = expandGlobs(withEnvVarsReplaced);
 
     if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
       const lastOutput = new TextDecoder().decode(
@@ -107,9 +106,11 @@ while (true) {
       continue;
     }
 
+    const withGlobsExpanded = await expandGlobs(withEnvVarsReplaced);
+
     let withInterpolatedJS;
     try {
-      withInterpolatedJS = evalAndInterpolateJS(withEnvVarsReplaced);
+      withInterpolatedJS = evalAndInterpolateJS(withGlobsExpanded);
     } catch (err) {
       console.error("Failed to interpolate JS: ", err.toString());
       continue;

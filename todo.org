@@ -9,7 +9,7 @@ Always left to right?
 
 Cases: stdout, in, err, files
 
-Just trying some stuff out.
+Just trying some stuff out
 
 * TODO Persist history
 * TODO Improve readme
@@ -29,8 +29,8 @@ Any other statement should be eval'd in Deno."
 And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
 
 * TODO Fuzzyfinder
-* TODO Make the indent area a beautiful auto-generated pattern
 * TODO Autocompletion
+* TODO Make the indent area a beautiful auto-generated pattern
 * TODO Surface JS syntax errors while writing
 * TODO Shortcut to re-run current JS snippet with previous output and show result
 * TODO Async reader triggering of custom functions

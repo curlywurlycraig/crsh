@@ -1,4 +1,4 @@
-// Runs a command line process
+// Runs a command line process and returns the resulting stdout
 export const exec = async (command, args) => {
   const p = Deno.run({
     cmd: [command, ...args],
@@ -6,4 +6,8 @@ export const exec = async (command, args) => {
     stdout: "piped",
     stderr: "piped",
   });
+
+  const resultByteArray = await Deno.readAll(p.stdout);
+  await p.stdout?.close();
+  return new TextDecoder().decode(resultByteArray);
 };
