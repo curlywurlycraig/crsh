@@ -17,6 +17,11 @@ Just trying some stuff out
 * TODO Try to sandbox eval's
 * TODO Support multiline
 * TODO Background jobs
+* TODO Fancier globs
+e.g.
+
+~/Documents/projects/deno_shell $ ls **/*.test.*
+tests/util/evalAndInterpolateJS.test.js   tests/util/mergeArgsBetweenQuotes.test.js tests/util/replaceEnvVars.test.js
 
 * Everything above this line is for feature parity with existing shells
 
