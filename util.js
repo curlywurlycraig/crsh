@@ -79,11 +79,11 @@ export const expandGlobs = async (stringInput) => {
   const globRegex = /[^\\ ]*\*[^ \*]?/g;
 
   let result = stringInput;
-  const matchResults = matchAll(globRegex, stringInput);
-  // TODO Handle multiple matches
-  let matchResult = matchResults.length > 0 ? matchResults[0] : null;
 
-  if (matchResult !== null) {
+  const matchResults = matchAll(globRegex, stringInput);
+  let matchResult = globRegex.exec(stringInput);
+
+  while (matchResult !== null) {
     // TODO Cover things like "../*" "*.extension" "../*.extension"
     //      Probably do that by splitting into the dir portion + filename portion
     let filesInCurrentDir = [];
@@ -94,14 +94,15 @@ export const expandGlobs = async (stringInput) => {
     // Replace glob with list of dirs
     const globToken = matchResult[0];
     const globIndex = matchResult.index;
-    return (
-      stringInput.slice(0, globIndex) +
+    result =
+      result.slice(0, globIndex) +
       filesInCurrentDir.join(" ") +
-      stringInput.slice(globIndex + globToken.length)
-    );
+      result.slice(globIndex + globToken.length);
+
+    matchResult = globRegex.exec(result);
   }
 
-  return stringInput;
+  return result;
 };
 
 export const matchAll = (re, str) => {
