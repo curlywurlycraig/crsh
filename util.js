@@ -80,7 +80,6 @@ export const expandGlobs = async (stringInput) => {
 
   let result = stringInput;
 
-  const matchResults = matchAll(globRegex, stringInput);
   let matchResult = globRegex.exec(stringInput);
 
   while (matchResult !== null) {
@@ -95,12 +94,18 @@ export const expandGlobs = async (stringInput) => {
     let suffix = globToken.slice(globToken.indexOf("*") + 1);
 
     let filesInCurrentDir = [];
-    for await (const dirEntry of Deno.readDir(dir)) {
-      const fileName = dir === "." ? dirEntry.name : `${dir}/${dirEntry.name}`;
 
-      if (fileName.endsWith(suffix)) {
-        filesInCurrentDir.push(fileName);
+    try {
+      for await (const dirEntry of Deno.readDir(dir)) {
+        const fileName =
+          dir === "." ? dirEntry.name : `${dir}/${dirEntry.name}`;
+
+        if (fileName.endsWith(suffix)) {
+          filesInCurrentDir.push(fileName);
+        }
       }
+    } catch (e) {
+      return stringInput;
     }
 
     result =
@@ -123,4 +128,18 @@ export const matchAll = (re, str) => {
   }
 
   return results;
+};
+
+// Runs a command line process and returns the resulting stdout
+export const exec = async (command, args) => {
+  const p = Deno.run({
+    cmd: [command, ...args],
+    stdin: "piped",
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const resultByteArray = await Deno.readAll(p.stdout);
+  await p.stdout?.close();
+  return new TextDecoder().decode(resultByteArray);
 };

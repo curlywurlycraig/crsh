@@ -9,7 +9,7 @@ import {
   evalAndInterpolateJS,
   expandGlobs,
 } from "./util.js";
-import { exec } from "./processes.js";
+import processManager from "./processes.js";
 
 while (true) {
   const userInput = await readCommand();
@@ -43,7 +43,7 @@ while (true) {
     stderr: new StringReader(),
   };
 
-  const processes = [];
+  processManager.expectCommands = commands.length;
 
   for (let index = 0; index < commands.length; index++) {
     const isFirst = index === 0;
@@ -172,9 +172,8 @@ while (true) {
         stderr: p.stderr,
       };
 
-      processes.push(p);
+      processManager.addProcess(p);
     } catch (err) {
-      //   console.debug("err is this ", err);
       if (err instanceof Deno.errors.NotFound) {
         console.error(`Couldn't find command "${executable}"`);
       } else {
@@ -183,9 +182,6 @@ while (true) {
     }
   }
 
-  for (let i = 0; i < processes.length; i++) {
-    const process = processes[i];
-    await process.status();
-    await process.close();
-  }
+  await processManager.processPromise;
+  processManager.resetPromise();
 }

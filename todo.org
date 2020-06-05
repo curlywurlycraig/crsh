@@ -1,4 +1,3 @@
-* TODO * globbing e.g. rm *.txt
 * TODO Manage resources/resource IDs.
 
 Do this in a more Deno way than bash way. Think of resources over file descriptors.
@@ -8,8 +7,6 @@ Do this in a more Deno way than bash way. Think of resources over file descripto
 Always left to right?
 
 Cases: stdout, in, err, files
-
-Just trying some stuff out
 
 * TODO Persist history
 * TODO Improve readme
@@ -65,3 +62,7 @@ Like can you just have them on git and reference them in deno?
 ** Non-canonical input
 ** Piping stdin + stdout
 ** File descriptors. Abstractions make this a little difficult. Can feed these difficulties back into the Deno project?
+** OS Signals
+
+** resources
+https://catonmat.net/bash-one-liners-explained-part-three#:~:text=When%20bash%20starts%20it%20opens,them%20and%20read%20from%20them.
