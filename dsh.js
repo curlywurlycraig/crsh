@@ -39,11 +39,9 @@ while (true) {
 
   let lastIO = {
     stdin: new StringWriter(),
-    stdout: new StringReader(),
-    stderr: new StringReader(),
+    stdout: new StringReader(""),
+    stderr: new StringReader(""),
   };
-
-  processManager.expectCommands = commands.length;
 
   for (let index = 0; index < commands.length; index++) {
     const isFirst = index === 0;
@@ -89,7 +87,7 @@ while (true) {
 
         lastIO = {
           stdout: new StringReader(`${nextContent}\n`),
-          stderr: new StringReader(),
+          stderr: new StringReader(""),
           stdin: new StringWriter(),
         };
 
@@ -128,7 +126,7 @@ while (true) {
         const nextContent = result ? result.toString() : "";
         lastIO = {
           stdout: new StringReader(`${nextContent}\n`),
-          stderr: new StringReader(),
+          stderr: new StringReader(""),
           stdin: new StringWriter(),
         };
       } catch (err) {
@@ -140,6 +138,8 @@ while (true) {
     }
 
     try {
+      processManager.expectCommands += 1;
+
       if (defaultExtraUnixArgs[executable] !== undefined) {
         args = defaultExtraUnixArgs[executable](args);
       }
@@ -184,4 +184,5 @@ while (true) {
 
   await processManager.processPromise;
   processManager.resetPromise();
+  processManager.expectCommands = 0;
 }

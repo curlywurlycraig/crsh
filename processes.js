@@ -1,6 +1,7 @@
 class ProcessManager {
   constructor() {
     this.processes = [];
+    this.resolver = null;
     this.resetPromise();
     this.expectCommands = 0;
   }
@@ -8,27 +9,7 @@ class ProcessManager {
   resetPromise() {
     // This basically sets up a listener for sub process signals
     this.processPromise = new Promise((resolve, reject) => {
-      Deno.signal(Deno.Signal.SIGCHLD).then(() => {
-        console.log("triggor");
-        let finishedProcessCount = 0;
-        this.processes.forEach((p) => {
-          if (p.computedStatus !== undefined) {
-            finishedProcessCount++;
-          }
-
-          if (p.hasClosed === undefined) {
-            p.close();
-            p.hasClosed = true;
-          }
-        });
-
-        console.log("finished", finishedProcessCount);
-        console.log("expect", this.expectCommands);
-        if (finishedProcessCount === this.expectCommands) {
-          this.processes = [];
-          resolve();
-        }
-      });
+      this.resolver = resolve;
 
       Deno.signal(Deno.Signal.SIGTSTP).then(async () => {
         resolve();
@@ -41,6 +22,20 @@ class ProcessManager {
 
     process.status().then((computedStatus) => {
       process.computedStatus = computedStatus;
+
+      let finishedProcessCount = 0;
+      this.processes.forEach((p) => {
+        if (p.computedStatus !== undefined) {
+          finishedProcessCount++;
+        }
+      });
+
+      if (finishedProcessCount === this.expectCommands) {
+        this.processes.forEach((p) => p.close());
+
+        this.processes = [];
+        this.resolver();
+      }
     });
   }
 }
