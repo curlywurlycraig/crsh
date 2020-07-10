@@ -1,19 +1,8 @@
-* TODO Manage resources/resource IDs.
-
-Do this in a more Deno way than bash way. Think of resources over file descriptors.
-
-** Maybe a more readable way too.
-
-Always left to right?
-
-Cases: stdout, in, err, files
-
 * TODO Persist history
 * TODO Improve readme
 * TODO Better error handling (don't crash ever)
 * TODO Try to sandbox eval's
 * TODO Support multiline
-* TODO Background jobs
 * TODO Alt + Left / Right
 * TODO Fancier globs
 e.g.
@@ -32,7 +21,6 @@ Any other statement should be eval'd in Deno."
 And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
 
 * TODO Fuzzyfinder
-* TODO Autocompletion
 * TODO Make the indent area a beautiful auto-generated pattern
 * TODO Surface JS syntax errors while writing
 * TODO Shortcut to re-run current JS snippet with previous output and show result
@@ -47,6 +35,18 @@ if (/git checkout -b/.test()) {
     // perform git branch command
     // auto complete git branch
 }
+
+* TODO Manage resources/resource IDs.
+
+Do this in a more Deno way than bash way. Think of resources over file descriptors.
+
+** Maybe a more readable way too.
+
+Always left to right?
+
+Cases: stdout, in, err, files
+
+* TODO Background jobs
 
 * TODO Add tests
 * TODO Use typescript
