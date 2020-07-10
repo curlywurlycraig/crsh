@@ -1,9 +1,11 @@
 import { prompt } from "./prompt.js";
+import { complete } from "./tabCompletion.js";
 
 // Helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
 export const controlCharactersBytesMap = {
   "3": "ctrlc",
   "4": "ctrld",
+  "9": "tab",
   "13": "return",
   "127": "backspace",
   "27,91,68": "left",
@@ -27,7 +29,6 @@ export const getCursorPosition = async (stdout, stdin) => {
   );
   const cursorPositionBuf = new Uint8Array(100);
   const cursorNumberOfBytesRead = await stdin.read(cursorPositionBuf);
-  // console.log(cursorPositionBuf);
   const relevantCursorBuf = cursorPositionBuf.slice(0, cursorNumberOfBytesRead);
   const cursorInfoString = new TextDecoder().decode(relevantCursorBuf.slice(1));
 
@@ -76,6 +77,7 @@ export const readCommand = async () => {
 
   let userInput = "";
   let cursorPosition = 0;
+  let tabIndex = 0;
 
   while (true) {
     const buf = new Uint8Array(256);
@@ -188,6 +190,20 @@ export const readCommand = async () => {
 
       await Deno.stdout.write(relevantBuf);
       cursorPosition++;
+      continue;
+    }
+
+    if (controlCharactersBytesMap[relevantBuf] === "tab") {
+      // Check autocompletion configs (for things like git)
+      // If no match, should just do file.
+
+      // TODO Track tab index
+
+      userInput = await complete(userInput, tabIndex);
+      cursorPosition = userInput.length;
+
+      await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
+      tabIndex += 1;
       continue;
     }
 

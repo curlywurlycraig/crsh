@@ -1,8 +1,7 @@
-* TODO Persist history
 * TODO Fix multiple keys at once breaking cursor positioning
 This happens due to reading from stdin for both input and to get cursor position
+* TODO Basic tab completion
 * TODO Better error handling (don't crash ever)
-* TODO Try to sandbox eval's
 * TODO Support multiline
 * TODO Alt + Left / Right
 * TODO Fancier globs
@@ -27,6 +26,7 @@ Any other statement should be eval'd in Deno."
 
 And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
 
+* TODO Persist history
 * TODO Fuzzyfinder
 * TODO Make the indent area a beautiful auto-generated pattern
 * TODO Surface JS syntax errors while writing

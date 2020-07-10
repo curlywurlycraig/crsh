@@ -74,6 +74,31 @@ export const evalAndInterpolateJS = (stringInput) => {
   return result;
 };
 
+export const expandGlob = async (token) => {
+  let dir = ".";
+  if (token.includes("/")) {
+    dir = token.slice(0, token.lastIndexOf("/"));
+  }
+
+  let suffix = token.slice(token.indexOf("*") + 1);
+
+  let filesInCurrentDir = [];
+
+  for await (const dirEntry of Deno.readDir(dir)) {
+    const fileName = dir === "." ? dirEntry.name : `${dir}/${dirEntry.name}`;
+
+    if (fileName.endsWith(suffix)) {
+      filesInCurrentDir.push(fileName);
+    }
+  }
+
+  return filesInCurrentDir;
+};
+
+export const getTokenUnderCursor = (string, cursorIndex) => {
+  // TODO
+};
+
 export const expandGlobs = async (stringInput) => {
   // Find unescaped asterisks
   const globRegex = /[^\\ ]*\*[^ \*]*/g;
@@ -86,34 +111,18 @@ export const expandGlobs = async (stringInput) => {
     const globToken = matchResult[0];
     const globIndex = matchResult.index;
 
-    let dir = ".";
-    if (globToken.includes("/")) {
-      dir = globToken.slice(0, globToken.lastIndexOf("/"));
-    }
-
-    let suffix = globToken.slice(globToken.indexOf("*") + 1);
-
-    let filesInCurrentDir = [];
-
     try {
-      for await (const dirEntry of Deno.readDir(dir)) {
-        const fileName =
-          dir === "." ? dirEntry.name : `${dir}/${dirEntry.name}`;
+      const filesInCurrentDir = await expandGlob(globToken);
 
-        if (fileName.endsWith(suffix)) {
-          filesInCurrentDir.push(fileName);
-        }
-      }
+      result =
+        result.slice(0, globIndex) +
+        filesInCurrentDir.join(" ") +
+        result.slice(globIndex + globToken.length);
+
+      matchResult = globRegex.exec(result);
     } catch (e) {
       return stringInput;
     }
-
-    result =
-      result.slice(0, globIndex) +
-      filesInCurrentDir.join(" ") +
-      result.slice(globIndex + globToken.length);
-
-    matchResult = globRegex.exec(result);
   }
 
   return result;
