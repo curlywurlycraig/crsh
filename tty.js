@@ -27,6 +27,7 @@ export const getCursorPosition = async (stdout, stdin) => {
   );
   const cursorPositionBuf = new Uint8Array(100);
   const cursorNumberOfBytesRead = await stdin.read(cursorPositionBuf);
+  // console.log(cursorPositionBuf);
   const relevantCursorBuf = cursorPositionBuf.slice(0, cursorNumberOfBytesRead);
   const cursorInfoString = new TextDecoder().decode(relevantCursorBuf.slice(1));
 

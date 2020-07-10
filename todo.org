@@ -1,5 +1,6 @@
 * TODO Persist history
-* TODO Improve readme
+* TODO Fix multiple keys at once breaking cursor positioning
+This happens due to reading from stdin for both input and to get cursor position
 * TODO Better error handling (don't crash ever)
 * TODO Try to sandbox eval's
 * TODO Support multiline
@@ -9,6 +10,12 @@ e.g.
 
 ~/Documents/projects/deno_shell $ ls **/*.test.*
 tests/util/evalAndInterpolateJS.test.js   tests/util/mergeArgsBetweenQuotes.test.js tests/util/replaceEnvVars.test.js
+
+Also tilde:
+
+$ ls ~/*.js
+home.js
+$
 
 * Everything above this line is for feature parity with existing shells
 

@@ -3,7 +3,6 @@ class ProcessManager {
     this.processes = [];
     this.resolver = null;
     this.resetPromise();
-    this.expectCommands = 0;
   }
 
   resetPromise() {
@@ -30,7 +29,7 @@ class ProcessManager {
         }
       });
 
-      if (finishedProcessCount === this.expectCommands) {
+      if (finishedProcessCount === this.processes.length) {
         this.processes.forEach((p) => p.close());
 
         this.processes = [];

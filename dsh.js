@@ -138,8 +138,6 @@ while (true) {
     }
 
     try {
-      processManager.expectCommands += 1;
-
       if (defaultExtraUnixArgs[executable] !== undefined) {
         args = defaultExtraUnixArgs[executable](args);
       }
@@ -182,7 +180,10 @@ while (true) {
     }
   }
 
-  await processManager.processPromise;
+  if (processManager.processes.length > 0) {
+    await processManager.processPromise;
+  }
+
   processManager.resetPromise();
   processManager.expectCommands = 0;
 }
