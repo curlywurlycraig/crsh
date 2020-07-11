@@ -1,3 +1,5 @@
+import { completeFile } from "./file.js";
+
 const gitCommands = [
   "clone",
   "init",
@@ -24,7 +26,10 @@ const gitCommands = [
 
 const gitRules = [
   {
-    name: "Git",
+    match: /^git add /,
+    complete: completeFile,
+  },
+  {
     match: /^git /,
     complete: async (token, tabIndex) => {
       const filteredCommands = gitCommands.filter((command) =>

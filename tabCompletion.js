@@ -1,5 +1,6 @@
 import { expandGlob, getTokenUnderCursor } from "./util.js";
 import gitRules from "./completionRules/git.js";
+import fileRule from "./completionRules/file.js";
 
 // Cache the prefix so that autocompleting allows cycling through
 // results
@@ -7,19 +8,7 @@ let textSoFarCache = null;
 let cursorIndexCache = null;
 
 // Prioritised order. Any matching rule will prevent later rules from executing
-const rules = [
-  ...gitRules,
-  {
-    name: "File",
-    match: /^.*/,
-    complete: async (token, tabIndex) => {
-      const files = await expandGlob(`${token}*`);
-      const currentFile = files[tabIndex % files.length];
-
-      return currentFile;
-    },
-  },
-];
+const rules = [...gitRules, fileRule];
 
 export const complete = async (textSoFar, cursorIndex, tabIndex) => {
   if (tabIndex === 0) {
