@@ -194,11 +194,6 @@ export const readCommand = async () => {
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "tab") {
-      // Check autocompletion configs (for things like git)
-      // If no match, should just do file.
-
-      // TODO Track tab index
-
       userInput = await complete(userInput, cursorPosition, tabIndex);
       cursorPosition = userInput.length;
 
