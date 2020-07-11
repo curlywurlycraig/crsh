@@ -86,6 +86,10 @@ export const readCommand = async () => {
 
     // console.debug("got ", buf.slice(0, numberOfBytesRead));
 
+    if (controlCharactersBytesMap[relevantBuf] !== "tab") {
+      tabIndex = 0;
+    }
+
     if (controlCharactersBytesMap[relevantBuf] === "ctrld") {
       Deno.exit(0);
     }
