@@ -1,5 +1,3 @@
-* TODO Fix multiple keys at once breaking cursor positioning
-This happens due to reading from stdin for both input and to get cursor position
 * TODO Better error handling (don't crash ever)
 * TODO Support multiline
 * TODO Alt + Left / Right

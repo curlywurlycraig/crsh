@@ -1,7 +1,10 @@
-import { prompt } from "./prompt.js";
+import { prompt, promptLength } from "./prompt.js";
 import { complete } from "./tabCompletion.js";
 
 // Helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
+// Another helpful reference: http://www.pitt.edu/~jcaretto/text/cleanup/twproae.html
+// An angry but helpful reference: http://xn--rpa.cc/irl/term.html
+// https://en.wikipedia.org/wiki/ANSI_escape_code#Escape_sequences
 export const controlCharactersBytesMap = {
   "3": "ctrlc",
   "4": "ctrld",
@@ -20,50 +23,48 @@ export const controlCharactersBytesMap = {
 export const reverseControlCharactersBytesMap = {
   eraseLine: [27, 91, 50, 75],
   cursorLeft: [27, 91, 68],
+  cursorRight: [27, 91, 67],
+  eraseToEndOfLine: [27, 91, 75],
+  saveCursor: [27, 91, 115],
+  loadCursor: [27, 91, 117],
   queryCursorPosition: [27, 91, 54, 110],
 };
 
-export const getCursorPosition = async (stdout, stdin) => {
-  // console.log("querying cursor position");
-  stdout.write(
-    Uint8Array.from(reverseControlCharactersBytesMap.queryCursorPosition)
-  );
-  // console.log("reading cursor position");
-  const cursorPositionBuf = new Uint8Array(100);
-  const cursorNumberOfBytesRead = await stdin.read(cursorPositionBuf);
-  // console.log("read cursor position");
-  const relevantCursorBuf = cursorPositionBuf.slice(0, cursorNumberOfBytesRead);
-  const cursorInfoString = new TextDecoder().decode(relevantCursorBuf.slice(1));
-
-  const [row, column] = cursorInfoString
-    .slice(1, cursorInfoString.length - 1)
-    .split(";");
-
-  return [row, column];
-};
-
-export const setCursorPosition = (stdout, row, column) => {
+export const setCursorPosition = (row, column) => {
   const positionSegment = new TextEncoder().encode(`${row};${column}H`);
-  stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
+  Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
 };
 
-// Cursor ends up at the end of the new line. Remember to reposition after!
-export const rewriteLine = async (stdin, stdout, text) => {
-  // Erase whole line
-  // TODO Erase more carefully to avoid flicker. No need to remove the whole line.
-  // Just write over!
-  stdout.write(Uint8Array.from(reverseControlCharactersBytesMap.eraseLine));
+export const setCursorColumn = (column) => {
+  const positionSegment = new TextEncoder().encode(`${column}G`);
+  Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
+};
 
-  // Get cursor position
-  const [row, column] = await getCursorPosition(stdout, stdin);
+export const rewriteLineAfterPosition = async (text, position) => {
+  await Deno.stdout.write(
+    Uint8Array.from(reverseControlCharactersBytesMap.saveCursor)
+  );
 
-  // Move cursor to beginning of line
-  setCursorPosition(stdout, row, 0);
+  await Deno.stdout.write(
+    Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+  );
 
   // Rewrite text
-  await stdout.write(new TextEncoder().encode(text));
+  await Deno.stdout.write(new TextEncoder().encode(text.slice(position)));
 
-  return [row, column];
+  await Deno.stdout.write(
+    Uint8Array.from(reverseControlCharactersBytesMap.loadCursor)
+  );
+};
+
+export const replaceAllInput = async (text) => {
+  await setCursorColumn(promptLength() + 1);
+
+  await Deno.stdout.write(
+    Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+  );
+
+  await Deno.stdout.write(new TextEncoder().encode(text));
 };
 
 // TODO Read history from a file
@@ -101,11 +102,7 @@ export const readCommand = async () => {
       userInput = "";
       cursorPosition = 0;
 
-      const [row, column] = await rewriteLine(
-        Deno.stdin,
-        Deno.stdout,
-        `${prompt()}${userInput}`
-      );
+      await rewriteLineAfterPosition(userInput, cursorPosition);
 
       continue;
     }
@@ -126,13 +123,12 @@ export const readCommand = async () => {
 
       cursorPosition--;
 
-      const [row, column] = await rewriteLine(
-        Deno.stdin,
-        Deno.stdout,
-        `${prompt()}${userInput}`
+      await Deno.stdout.write(
+        Uint8Array.from(reverseControlCharactersBytesMap.cursorLeft)
       );
 
-      setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
+      await rewriteLineAfterPosition(userInput, cursorPosition);
+
       continue;
     }
 
@@ -145,13 +141,8 @@ export const readCommand = async () => {
         userInput.slice(0, cursorPosition) +
         userInput.slice(cursorPosition + 1, userInput.length);
 
-      const [row, column] = await rewriteLine(
-        Deno.stdin,
-        Deno.stdout,
-        `${prompt()}${userInput}`
-      );
+      await rewriteLineAfterPosition(userInput, cursorPosition);
 
-      setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
       continue;
     }
 
@@ -164,7 +155,7 @@ export const readCommand = async () => {
       userInput = history[currentHistoryIndex];
       cursorPosition = userInput.length;
 
-      await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
+      await replaceAllInput(userInput);
       continue;
     }
 
@@ -180,7 +171,7 @@ export const readCommand = async () => {
           : history[currentHistoryIndex];
       cursorPosition = userInput.length;
 
-      await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
+      await replaceAllInput(userInput);
       continue;
     }
 
@@ -188,6 +179,7 @@ export const readCommand = async () => {
       if (cursorPosition === 0) continue;
 
       await Deno.stdout.write(relevantBuf);
+
       cursorPosition--;
       continue;
     }
@@ -201,15 +193,30 @@ export const readCommand = async () => {
     }
 
     if (controlCharactersBytesMap[relevantBuf] === "tab") {
-      userInput = await complete(userInput, cursorPosition, tabIndex);
-      cursorPosition = userInput.length;
+      const { newInput, tokenIndex, tokenLength } = await complete(
+        userInput,
+        cursorPosition,
+        tabIndex
+      );
+      userInput = newInput;
 
-      await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);
+      setCursorColumn(promptLength() + 1);
+
+      await Deno.stdout.write(
+        Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+      );
+
+      // Rewrite text
+      await Deno.stdout.write(new TextEncoder().encode(userInput));
+
+      cursorPosition = tokenIndex + tokenLength;
+      setCursorColumn(promptLength() + cursorPosition + 1);
+
       tabIndex += 1;
       continue;
     }
 
-    // All other text
+    // All other text (hopefully normal characters)
     const decodedString = new TextDecoder().decode(relevantBuf);
 
     userInput =
@@ -217,15 +224,12 @@ export const readCommand = async () => {
       decodedString +
       userInput.slice(cursorPosition, userInput.length);
 
-    cursorPosition += decodedString.length;
-
-    const [row, column] = await rewriteLine(
-      Deno.stdin,
-      Deno.stdout,
-      `${prompt()}${userInput}`
+    await rewriteLineAfterPosition(userInput, cursorPosition);
+    Deno.stdout.write(
+      Uint8Array.from(reverseControlCharactersBytesMap.cursorRight)
     );
 
-    setCursorPosition(Deno.stdout, row, prompt().length + cursorPosition - 9);
+    cursorPosition += decodedString.length;
   }
 
   // Disable raw mode while routing stdin to sub-processes.

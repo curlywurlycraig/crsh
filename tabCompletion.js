@@ -27,5 +27,9 @@ export const complete = async (textSoFar, cursorIndex, tabIndex) => {
     completedToken +
     textSoFarCache.slice(tokenIndex + token.length);
 
-  return newInput;
+  return {
+    newInput,
+    tokenIndex,
+    tokenLength: completedToken.length,
+  };
 };
