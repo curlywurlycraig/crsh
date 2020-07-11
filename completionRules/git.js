@@ -33,7 +33,7 @@ const gitRules = [
   {
     match: /^git checkout /,
     complete: async (token, tabIndex) => {
-      const branches = await (await exec("git", ["branch"]))
+      const branches = (await exec("git", ["branch"]))
         .split("\n")
         .map((branch) => branch.trim())
         .filter(
