@@ -25,6 +25,15 @@ const gitCommands = [
   "push",
 ];
 
+const completeBranches = async (token, tabIndex) => {
+  const branches = (await exec("git", ["branch"]))
+    .split("\n")
+    .map((branch) => branch.trim())
+    .filter((branch) => branch.startsWith(token) && !branch.startsWith("*"));
+
+  return branches[tabIndex % branches.length];
+};
+
 const gitRules = [
   {
     match: /^git add /,
@@ -32,16 +41,11 @@ const gitRules = [
   },
   {
     match: /^git checkout /,
-    complete: async (token, tabIndex) => {
-      const branches = (await exec("git", ["branch"]))
-        .split("\n")
-        .map((branch) => branch.trim())
-        .filter(
-          (branch) => branch.startsWith(token) && !branch.startsWith("*")
-        );
-
-      return branches[tabIndex % branches.length];
-    },
+    complete: completeBranches,
+  },
+  {
+    match: /^git branch -D /,
+    complete: completeBranches,
   },
   {
     match: /^git /,
