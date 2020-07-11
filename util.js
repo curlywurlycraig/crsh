@@ -161,5 +161,8 @@ export const exec = async (command, args) => {
 
   const resultByteArray = await Deno.readAll(p.stdout);
   await p.stdout?.close();
+  await p.stdin?.close();
+  await p.stderr?.close();
+  await p.close();
   return new TextDecoder().decode(resultByteArray);
 };

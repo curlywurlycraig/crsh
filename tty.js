@@ -24,11 +24,14 @@ export const reverseControlCharactersBytesMap = {
 };
 
 export const getCursorPosition = async (stdout, stdin) => {
+  // console.log("querying cursor position");
   stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.queryCursorPosition)
   );
+  // console.log("reading cursor position");
   const cursorPositionBuf = new Uint8Array(100);
   const cursorNumberOfBytesRead = await stdin.read(cursorPositionBuf);
+  // console.log("read cursor position");
   const relevantCursorBuf = cursorPositionBuf.slice(0, cursorNumberOfBytesRead);
   const cursorInfoString = new TextDecoder().decode(relevantCursorBuf.slice(1));
 
