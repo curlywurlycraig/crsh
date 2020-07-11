@@ -199,7 +199,7 @@ export const readCommand = async () => {
 
       // TODO Track tab index
 
-      userInput = await complete(userInput, tabIndex);
+      userInput = await complete(userInput, cursorPosition, tabIndex);
       cursorPosition = userInput.length;
 
       await rewriteLine(Deno.stdin, Deno.stdout, `${prompt()}${userInput}`);

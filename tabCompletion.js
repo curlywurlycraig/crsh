@@ -1,12 +1,16 @@
-import { expandGlob } from "./util.js";
+import { expandGlob, getTokenUnderCursor } from "./util.js";
 
 // TODO Also pass cursor position to complete only the relevant part (getTokenUnderCursor)
-export const complete = async (textSoFar, tabIndex) => {
+export const complete = async (textSoFar, cursorIndex, tabIndex) => {
   // Get files in the current dir
-  const split = textSoFar.split(" ");
-  const relevantPart = split[split.length - 1];
-  const files = await expandGlob(`${relevantPart}*`);
-  //   console.log("files: ", files);
-  // TODO Replace the token under cursor, rather than just appending
-  return `${textSoFar}${files[tabIndex % files.length]}`;
+  const { token, tokenIndex } = getTokenUnderCursor(textSoFar, cursorIndex);
+  const files = await expandGlob(`${token}*`);
+
+  const currentFile = files[tabIndex % files.length];
+  const newInput =
+    textSoFar.slice(0, tokenIndex) +
+    currentFile +
+    textSoFar.slice(tokenIndex + token.length);
+
+  return newInput;
 };

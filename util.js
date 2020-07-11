@@ -95,8 +95,29 @@ export const expandGlob = async (token) => {
   return filesInCurrentDir;
 };
 
-export const getTokenUnderCursor = (string, cursorIndex) => {
-  // TODO
+export const getTokenUnderCursor = (stringInput, cursorIndex) => {
+  const tokenRegex = /[^ ]+/g;
+
+  let matchResult = tokenRegex.exec(stringInput);
+
+  while (matchResult !== null) {
+    const token = matchResult[0];
+    const tokenIndex = matchResult.index;
+
+    if (tokenIndex <= cursorIndex && tokenIndex + token.length >= cursorIndex) {
+      return {
+        token,
+        tokenIndex,
+      };
+    }
+
+    matchResult = tokenRegex.exec(stringInput);
+  }
+
+  return {
+    token: "",
+    tokenIndex: cursorIndex,
+  };
 };
 
 export const expandGlobs = async (stringInput) => {
@@ -126,17 +147,6 @@ export const expandGlobs = async (stringInput) => {
   }
 
   return result;
-};
-
-export const matchAll = (re, str) => {
-  let results = [];
-  let matchResult = re.exec(str);
-  while (matchResult !== null) {
-    results.push(matchResult);
-    matchResult = re.exec(str);
-  }
-
-  return results;
 };
 
 // Runs a command line process and returns the resulting stdout
