@@ -1,6 +1,5 @@
 * TODO Fix multiple keys at once breaking cursor positioning
 This happens due to reading from stdin for both input and to get cursor position
-* TODO Basic tab completion
 * TODO Better error handling (don't crash ever)
 * TODO Support multiline
 * TODO Alt + Left / Right
@@ -35,13 +34,6 @@ And if I start a new scope, a newline should not yet execute the command, and sh
 This would be extra good combined with reading files as input
 * TODO Improve builtin, function definitions
 * TODO Let the user write functions that span multiple lines
-* TODO Auto completion
-** Also make it programmable! i.e. complete git branches etc. Maybe have auto complete let you supply a regex
-_example_
-if (/git checkout -b/.test()) {
-    // perform git branch command
-    // auto complete git branch
-}
 
 * TODO Manage resources/resource IDs.
 
