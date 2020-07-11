@@ -17,19 +17,27 @@ export const complete = async (textSoFar, cursorIndex, tabIndex) => {
     cursorIndexCache
   );
 
-  // Run through autocompletion rules
-  const completedToken = await rules
-    .find((rule) => rule.match.exec(textSoFarCache) !== null)
-    ?.complete(token, tabIndex);
+  try {
+    // Run through autocompletion rules
+    const completedToken = await rules
+      .find((rule) => rule.match.exec(textSoFarCache) !== null)
+      ?.complete(token, tabIndex);
 
-  const newInput =
-    textSoFarCache.slice(0, tokenIndex) +
-    completedToken +
-    textSoFarCache.slice(tokenIndex + token.length);
+    const newInput =
+      textSoFarCache.slice(0, tokenIndex) +
+      completedToken +
+      textSoFarCache.slice(tokenIndex + token.length);
 
-  return {
-    newInput,
-    tokenIndex,
-    tokenLength: completedToken.length,
-  };
+    return {
+      newInput,
+      tokenIndex,
+      tokenLength: completedToken.length,
+    };
+  } catch {
+    return {
+      newInput: textSoFar,
+      tokenIndex,
+      tokenLength: 0,
+    };
+  }
 };

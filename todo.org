@@ -1,5 +1,6 @@
 * TODO Better error handling (don't crash ever)
 * TODO Support multiline
+* TODO Improve npm auto completion
 * TODO Alt + Left / Right
 * TODO Fancier globs
 e.g.
@@ -51,6 +52,8 @@ Cases: stdout, in, err, files
 ** Cursor movement and other termy, curses type stuff
 ** Make them available as hosted deno modules (on git?)
 Like can you just have them on git and reference them in deno?
+* TODO Add error log. Catch when there's an autocomplete exception (and other exceptions) and log them to a file.
+This is how I should tie into fixing all crashes. Should be graceful
 
 
 * Learnings
