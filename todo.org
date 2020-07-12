@@ -5,15 +5,6 @@ e.g.
 ~/Documents/projects/deno_shell $ ls **/*.test.*
 tests/util/evalAndInterpolateJS.test.js   tests/util/mergeArgsBetweenQuotes.test.js tests/util/replaceEnvVars.test.js
 
-Also tilde:
-
-$ ls ~/*.js
-home.js
-$
-
-* Everything above this line is for feature parity with existing shells
-
-And other fun stuff
 * TODO Source a file
 Define a JS/unix hybrid. Something like this:
 "Any statement that doesn't end in a semi colon should be executed as a unix command.
