@@ -1,3 +1,6 @@
+Note. This is very immature and breaks in a lot of cases. Use at your own peril!
+[Associated blog post](https://crwi.uk/2020/07/12/crsh.html)
+
 crsh is a modern command line shell that allows seamless
 interoperability between unix commands and Javascript.
 
@@ -106,7 +109,9 @@ value
 ```
 
 # Installation
-TODO
+[Install Deno](https://deno.land/#installation)
+Clone this repo.
+
 
 # Running
 `./crsh`
@@ -115,6 +120,18 @@ You may need to make the above file executable:
 
 # Example command
 `curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.locations`
+
+# Configuration
+Edit `completionRules/rules.js` to include your own completion rules.
+Edit `prompt.sh` to make your own prompt.
+
+# Contributing
+
+There are a lot of bugs. If you see one, please open an issue and consider a pull request if you feel so inclined.
+
+I may close issues that I deem to be out of the scope of this shell, since I don't intend to bend over backwards to support older shell use cases.
+
+You can also create completion rules in your own repo to be imported, creating a kind of plugin system.
 
 # Special Thanks
 
