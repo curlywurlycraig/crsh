@@ -19,7 +19,7 @@ class ProcessManager {
   addProcess(process) {
     this.processes.push(process);
 
-    process.status().then((computedStatus) => {
+    process.status().then(async (computedStatus) => {
       process.computedStatus = computedStatus;
 
       let finishedProcessCount = 0;
@@ -30,7 +30,10 @@ class ProcessManager {
       });
 
       if (finishedProcessCount === this.processes.length) {
-        this.processes.forEach((p) => p.close());
+        for (let i = 0; i < this.processes.length; i++) {
+          const p = this.processes[i];
+          await p.close();
+        }
 
         this.processes = [];
         this.resolver();

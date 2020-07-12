@@ -173,3 +173,20 @@ export const exec = async (command, args) => {
   await p.close();
   return new TextDecoder().decode(resultByteArray);
 };
+
+export const cursorIsInFunctionOrQuotes = (string, cursorPosition) => {
+  const unclosedFunctionRegex = /[^\{]*\{[^\}]*$/g;
+  const unclosedQuotesRegex = /[^"]*"[^"]*$/g;
+  const unclosedSingleQuotesRegex = /[^']*'[^']*$/g;
+
+  const upToPosition = string.slice(cursorPosition);
+  if (
+    unclosedFunctionRegex.exec(upToPosition) !== null ||
+    unclosedQuotesRegex.exec(upToPosition) !== null ||
+    unclosedSingleQuotesRegex.exec(upToPosition) !== null
+  ) {
+    return true;
+  }
+
+  return false;
+};

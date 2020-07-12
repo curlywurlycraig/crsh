@@ -1,6 +1,6 @@
-import { prompt, promptLength } from "./prompt.js";
+import { prompt, promptLength, multilineGutter } from "./prompt.js";
 import { complete } from "./tabCompletion.js";
-import { getTokenUnderCursor } from "./util.js";
+import { getTokenUnderCursor, cursorIsInFunctionOrQuotes } from "./util.js";
 
 // Helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
 // Another helpful reference: http://www.pitt.edu/~jcaretto/text/cleanup/twproae.html
@@ -147,8 +147,28 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "return") {
-      await Deno.stdout.write(new TextEncoder().encode("\n"));
-      break;
+      if (cursorIsInFunctionOrQuotes(userInput, cursorPosition)) {
+        await Deno.stdout.write(
+          Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+        );
+
+        await Deno.stdout.write(
+          new TextEncoder().encode(`\n${multilineGutter()}`)
+        );
+
+        // Print remainder of line
+
+        // What about subsequent lines? I think this will be "dealt with"
+
+        // What about navigating?
+
+        // What about setting cursorPosition? (Probably just imagine userInput as a single sequence with \n characters in)
+        //    i.e., don't need to track a cursor row. That's a purely visual thing
+        continue;
+      } else {
+        await Deno.stdout.write(new TextEncoder().encode("\n"));
+        break;
+      }
     }
 
     if (controlCharacter === "backspace") {

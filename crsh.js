@@ -164,6 +164,7 @@ while (true) {
       if (isLast && outputFile !== null) {
         await Deno.copy(p.stdout, outputFile);
         await p.stdout?.close();
+        await p.stderr?.close();
         await outputFile.close();
       }
 
