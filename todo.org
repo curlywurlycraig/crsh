@@ -1,5 +1,4 @@
 * TODO Support multiline
-* TODO Alt + Left / Right
 * TODO Fancier globs
 e.g.
 
