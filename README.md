@@ -109,7 +109,9 @@ value
 TODO
 
 # Running
-`deno run --allow-run --allow-read --allow-write --allow-net --allow-env --unstable dsh.js`
+`./dsh`
+You may need to make the above file executable:
+`chmod +x dsh`
 
 # Example command
 `curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.locations`

@@ -1,6 +1,7 @@
-* TODO Better error handling (don't crash ever)
+* TODO Fix autocompletion when there are no options, but started with a prefix
+i.e. ls z
+* TODO Fix ctrl + C
 * TODO Support multiline
-* TODO Improve npm auto completion
 * TODO Alt + Left / Right
 * TODO Fancier globs
 e.g.

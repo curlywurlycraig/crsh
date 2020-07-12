@@ -43,7 +43,6 @@ export const performTabCompletion = async (
     tabIndex,
     resetCache
   );
-  userInput = newInput;
 
   setCursorColumn(promptLength() + 1);
 
@@ -52,10 +51,15 @@ export const performTabCompletion = async (
   );
 
   // Rewrite text
-  await Deno.stdout.write(new TextEncoder().encode(userInput));
+  await Deno.stdout.write(new TextEncoder().encode(newInput));
 
   cursorPosition = tokenIndex + tokenLength;
   setCursorColumn(promptLength() + cursorPosition + 1);
+
+  return {
+    newCursorPosition: tokenIndex + tokenLength,
+    newUserInput: newInput,
+  };
 };
 
 export const setCursorPosition = (row, column) => {
@@ -131,6 +135,8 @@ export const readCommand = async () => {
     if (controlCharacter === "ctrlc") {
       userInput = "";
       cursorPosition = 0;
+
+      setCursorColumn(promptLength() + 1);
 
       await rewriteLineAfterPosition(userInput, cursorPosition);
 
@@ -226,12 +232,15 @@ export const readCommand = async () => {
       const resetCache = tabIndex === -1;
       tabIndex += 1;
 
-      await performTabCompletion(
+      const { newCursorPosition, newUserInput } = await performTabCompletion(
         userInput,
         cursorPosition,
         tabIndex,
         resetCache
       );
+
+      userInput = newUserInput;
+      cursorPosition = newCursorPosition;
 
       continue;
     }
@@ -243,7 +252,15 @@ export const readCommand = async () => {
 
       tabIndex -= 1;
 
-      await performTabCompletion(userInput, cursorPosition, tabIndex, false);
+      const { newCursorPosition, newUserInput } = await performTabCompletion(
+        userInput,
+        cursorPosition,
+        tabIndex,
+        false
+      );
+
+      userInput = newUserInput;
+      cursorPosition = newCursorPosition;
 
       continue;
     }
