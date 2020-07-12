@@ -1,5 +1,6 @@
 import { prompt, promptLength } from "./prompt.js";
 import { complete } from "./tabCompletion.js";
+import { getTokenUnderCursor } from "./util.js";
 
 // Helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
 // Another helpful reference: http://www.pitt.edu/~jcaretto/text/cleanup/twproae.html
@@ -19,6 +20,8 @@ export const controlCharactersBytesMap = {
   "27,91,72": "home",
   "27,91,90": "shiftTab",
   "27,91,51,126": "delete",
+  "27,27,91,68": "altLeft",
+  "27,27,91,67": "altRight",
 };
 
 export const reverseControlCharactersBytesMap = {
@@ -225,6 +228,61 @@ export const readCommand = async () => {
 
       await Deno.stdout.write(relevantBuf);
       cursorPosition++;
+      continue;
+    }
+
+    if (controlCharacter === "altLeft") {
+      if (cursorPosition === 0) {
+        continue;
+      }
+
+      const { tokenIndex } = getTokenUnderCursor(userInput, cursorPosition);
+      if (tokenIndex < cursorPosition) {
+        cursorPosition = tokenIndex;
+      } else {
+        const { tokenIndex: previousTokenIndex } = getTokenUnderCursor(
+          userInput,
+          cursorPosition - 2
+        );
+        cursorPosition = previousTokenIndex;
+      }
+
+      setCursorColumn(promptLength() + 1 + cursorPosition);
+      continue;
+    }
+
+    if (controlCharacter === "altRight") {
+      if (cursorPosition === userInput.length) {
+        continue;
+      }
+
+      const { tokenIndex, token } = getTokenUnderCursor(
+        userInput,
+        cursorPosition
+      );
+      if (tokenIndex + token.length > cursorPosition) {
+        cursorPosition = tokenIndex + token.length;
+      } else {
+        const { tokenIndex: nextTokenIndex } = getTokenUnderCursor(
+          userInput,
+          tokenIndex + token.length + 2
+        );
+        cursorPosition = nextTokenIndex;
+      }
+
+      setCursorColumn(promptLength() + 1 + cursorPosition);
+      continue;
+    }
+
+    if (controlCharacter === "home") {
+      cursorPosition = 0;
+      setCursorColumn(promptLength() + 1);
+      continue;
+    }
+
+    if (controlCharacter === "end") {
+      cursorPosition = userInput.length;
+      setCursorColumn(promptLength() + 1 + userInput.length);
       continue;
     }
 

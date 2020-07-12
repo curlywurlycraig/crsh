@@ -106,6 +106,7 @@ export const getTokenUnderCursor = (stringInput, cursorIndex) => {
     const tokenIndex = matchResult.index;
 
     if (tokenIndex <= cursorIndex && tokenIndex + token.length >= cursorIndex) {
+      // console.log("token is ", token, tokenIndex);
       return {
         token,
         tokenIndex,
