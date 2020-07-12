@@ -17,6 +17,11 @@ export const complete = async (
     cursorIndexCache = cursorIndex;
   }
 
+  const { token, tokenIndex } = getTokenUnderCursor(
+    textSoFarCache,
+    cursorIndexCache
+  );
+
   if (tabIndex === -1) {
     return {
       newInput: textSoFarCache,
@@ -25,11 +30,7 @@ export const complete = async (
     };
   }
 
-  const { token, tokenIndex } = getTokenUnderCursor(
-    textSoFarCache,
-    cursorIndexCache
-  );
-
+  //   console.log("token length is ", token.length);
   try {
     // Run through autocompletion rules
     const completedToken = await rules
@@ -50,7 +51,7 @@ export const complete = async (
     return {
       newInput: textSoFar,
       tokenIndex,
-      tokenLength: 0,
+      tokenLength: token.length,
     };
   }
 };
