@@ -151,6 +151,12 @@ export const expandGlobs = async (stringInput) => {
   return result;
 };
 
+export const expandHome = (stringInput) => {
+  const homeRegex = /\~/g;
+
+  return stringInput.replace(homeRegex, Deno.env.get("HOME"));
+};
+
 // Runs a command line process and returns the resulting stdout
 export const exec = async (command, args) => {
   const p = Deno.run({

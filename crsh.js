@@ -8,6 +8,7 @@ import {
   replaceEnvVars,
   evalAndInterpolateJS,
   expandGlobs,
+  expandHome,
 } from "./util.js";
 import processManager from "./processes.js";
 
@@ -104,7 +105,9 @@ while (true) {
       continue;
     }
 
-    const withGlobsExpanded = await expandGlobs(withEnvVarsReplaced);
+    const withGlobsExpanded = await expandGlobs(
+      expandHome(withEnvVarsReplaced)
+    );
 
     let withInterpolatedJS;
     try {
