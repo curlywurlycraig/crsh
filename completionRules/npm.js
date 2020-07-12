@@ -47,7 +47,7 @@ const yarnCommands = [
 // TODO Make work with yarn AND npm
 const npmRules = [
   {
-    match: /^yarn /,
+    match: /^yarn $/,
     complete: async (token, tabIndex) => {
       const packageJsonRaw = await exec("cat", ["package.json"]);
       const customCommands =
