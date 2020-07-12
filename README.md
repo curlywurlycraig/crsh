@@ -1,7 +1,7 @@
-dsh (_Deno Shell_) is a modern command line shell that allows seamless
+crsh is a modern command line shell that allows seamless
 interoperability between unix commands and Javascript.
 
-dsh takes the composability and utility of unix commands and combines it with
+crsh takes the composability and utility of unix commands and combines it with
 the expressiveness of modern Javascript.
 
 Regular command execution will be familiar to those who have used the command line:
@@ -9,7 +9,7 @@ Regular command execution will be familiar to those who have used the command li
 ```
 $ ls | grep .js
 builtins.js
-dsh.js
+crsh.js
 functions.js
 ```
 
@@ -54,7 +54,7 @@ Raw output is also available:
 $ ls | ({ raw }) => raw
 README.md
 builtins.js
-dsh.js
+crsh.js
 prompt.js
 todo.org
 tty.js
@@ -109,9 +109,9 @@ value
 TODO
 
 # Running
-`./dsh`
+`./crsh`
 You may need to make the above file executable:
-`chmod +x dsh`
+`chmod +x crsh`
 
 # Example command
 `curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.locations`
