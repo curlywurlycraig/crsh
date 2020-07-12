@@ -17,6 +17,7 @@ export const controlCharactersBytesMap = {
   "27,91,66": "down",
   "27,91,70": "end",
   "27,91,72": "home",
+  "27,91,90": "shiftTab",
   "27,91,51,126": "delete",
 };
 
@@ -28,6 +29,33 @@ export const reverseControlCharactersBytesMap = {
   saveCursor: [27, 91, 115],
   loadCursor: [27, 91, 117],
   queryCursorPosition: [27, 91, 54, 110],
+};
+
+export const performTabCompletion = async (
+  userInput,
+  cursorPosition,
+  tabIndex,
+  resetCache
+) => {
+  const { newInput, tokenIndex, tokenLength } = await complete(
+    userInput,
+    cursorPosition,
+    tabIndex,
+    resetCache
+  );
+  userInput = newInput;
+
+  setCursorColumn(promptLength() + 1);
+
+  await Deno.stdout.write(
+    Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+  );
+
+  // Rewrite text
+  await Deno.stdout.write(new TextEncoder().encode(userInput));
+
+  cursorPosition = tokenIndex + tokenLength;
+  setCursorColumn(promptLength() + cursorPosition + 1);
 };
 
 export const setCursorPosition = (row, column) => {
@@ -81,7 +109,7 @@ export const readCommand = async () => {
 
   let userInput = "";
   let cursorPosition = 0;
-  let tabIndex = 0;
+  let tabIndex = -1;
 
   while (true) {
     const buf = new Uint8Array(256);
@@ -90,15 +118,17 @@ export const readCommand = async () => {
 
     // console.debug("got ", buf.slice(0, numberOfBytesRead));
 
-    if (controlCharactersBytesMap[relevantBuf] !== "tab") {
-      tabIndex = 0;
+    const controlCharacter = controlCharactersBytesMap[relevantBuf];
+
+    if (!["tab", "shiftTab"].includes(controlCharacter)) {
+      tabIndex = -1;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "ctrld") {
+    if (controlCharacter === "ctrld") {
       Deno.exit(0);
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "ctrlc") {
+    if (controlCharacter === "ctrlc") {
       userInput = "";
       cursorPosition = 0;
 
@@ -107,12 +137,12 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "return") {
+    if (controlCharacter === "return") {
       await Deno.stdout.write(new TextEncoder().encode("\n"));
       break;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "backspace") {
+    if (controlCharacter === "backspace") {
       if (cursorPosition === 0) {
         continue;
       }
@@ -132,7 +162,7 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "delete") {
+    if (controlCharacter === "delete") {
       if (cursorPosition === userInput.length) {
         continue;
       }
@@ -146,7 +176,7 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "up") {
+    if (controlCharacter === "up") {
       if (currentHistoryIndex <= 0) {
         continue;
       }
@@ -159,7 +189,7 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "down") {
+    if (controlCharacter === "down") {
       if (currentHistoryIndex === history.length) {
         continue;
       }
@@ -175,7 +205,7 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "left") {
+    if (controlCharacter === "left") {
       if (cursorPosition === 0) continue;
 
       await Deno.stdout.write(relevantBuf);
@@ -184,7 +214,7 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "right") {
+    if (controlCharacter === "right") {
       if (cursorPosition === userInput.length) continue;
 
       await Deno.stdout.write(relevantBuf);
@@ -192,27 +222,29 @@ export const readCommand = async () => {
       continue;
     }
 
-    if (controlCharactersBytesMap[relevantBuf] === "tab") {
-      const { newInput, tokenIndex, tokenLength } = await complete(
+    if (controlCharacter === "tab") {
+      const resetCache = tabIndex === -1;
+      tabIndex += 1;
+
+      await performTabCompletion(
         userInput,
         cursorPosition,
-        tabIndex
-      );
-      userInput = newInput;
-
-      setCursorColumn(promptLength() + 1);
-
-      await Deno.stdout.write(
-        Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+        tabIndex,
+        resetCache
       );
 
-      // Rewrite text
-      await Deno.stdout.write(new TextEncoder().encode(userInput));
+      continue;
+    }
 
-      cursorPosition = tokenIndex + tokenLength;
-      setCursorColumn(promptLength() + cursorPosition + 1);
+    if (controlCharacter === "shiftTab") {
+      if (tabIndex === -1) {
+        continue;
+      }
 
-      tabIndex += 1;
+      tabIndex -= 1;
+
+      await performTabCompletion(userInput, cursorPosition, tabIndex, false);
+
       continue;
     }
 

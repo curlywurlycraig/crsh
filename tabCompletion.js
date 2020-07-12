@@ -6,10 +6,23 @@ import rules from "./completionRules/rules.js";
 let textSoFarCache = null;
 let cursorIndexCache = null;
 
-export const complete = async (textSoFar, cursorIndex, tabIndex) => {
-  if (tabIndex === 0) {
+export const complete = async (
+  textSoFar,
+  cursorIndex,
+  tabIndex,
+  resetCache = false
+) => {
+  if (resetCache) {
     textSoFarCache = textSoFar;
     cursorIndexCache = cursorIndex;
+  }
+
+  if (tabIndex === -1) {
+    return {
+      newInput: textSoFarCache,
+      tokenIndex: textSoFarCache.length,
+      tokenLength: 0,
+    };
   }
 
   const { token, tokenIndex } = getTokenUnderCursor(
