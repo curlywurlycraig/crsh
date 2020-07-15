@@ -15,16 +15,14 @@ while (true) {
   const processPromise = new Promise(async (resolve, reject) => {
     let completedProcesses = 0;
 
-    const doContinue = () => {
-      resolve();
-      return;
-    };
-
     ///////
     // Read input
     ///////
     const userInput = await readCommand();
-    if (userInput.length === 0) doContinue();
+    if (userInput.length === 0) {
+      resolve();
+      return;
+    }
 
     ///////
     // Simple JS REPL execution
@@ -37,7 +35,8 @@ while (true) {
       } catch (err) {
         console.error(err.toString());
       }
-      doContinue();
+      resolve();
+      return;
     }
 
     ///////
@@ -54,7 +53,8 @@ while (true) {
     const incrementAndCheckCompletion = () => {
       completedProcesses += 1;
       if (completedProcesses >= commands.length) {
-        doContinue();
+        resolve();
+        return;
       }
     };
 
