@@ -1,4 +1,5 @@
 * TODO Support multiline
+* TODO Paste should move the cursor to the end of the line
 * TODO Fancier globs
 e.g.
 
@@ -10,11 +11,17 @@ Define a JS/unix hybrid. Something like this:
 "Any statement that doesn't end in a semi colon should be executed as a unix command.
 Any other statement should be eval'd in Deno."
 
-And if I start a new scope, a newline should not yet execute the command, and should write some fancy bit to the prompt instead
+* TODO Custom transformers
+Determine what transformers to execute by reading the
 
+* TODO Friendly helpful errors
+1. Something for transformers: "Looks like you are trying to use the json parser, but the previous output doesn't look like valid json."
+1. Something for JS errors. Print it nicely to stderr with colors.
+1. Other/missing commands. Maybe "did you mean" type message?
+
+* TODO Rethink basic JS commands (ending with ;)
 * TODO Persist history
 * TODO Fuzzyfinder
-* TODO Make the indent area a beautiful auto-generated pattern
 * TODO Surface JS syntax errors while writing
 * TODO Shortcut to re-run current JS snippet with previous output and show result
 * TODO Async reader triggering of custom functions
@@ -34,6 +41,9 @@ Cases: stdout, in, err, files
 
 * TODO Background jobs
 
+* TODO Refactor the main file. Process execution is messy
+There are different cases (JS execution, process execution) that overlap a little here and there.
+Think about how it could be tidier
 * TODO Add tests
 * TODO Use typescript
 * TODO Refactor to pull out reuseable parts
