@@ -352,11 +352,14 @@ export const readCommand = async () => {
       userInput.slice(cursorPosition, userInput.length);
 
     await rewriteLineAfterPosition(userInput, cursorPosition);
-    Deno.stdout.write(
-      Uint8Array.from(reverseControlCharactersBytesMap.cursorRight)
-    );
 
-    cursorPosition += decodedString.length;
+    for (var i = 0; i < decodedString.length; i++) {
+      await Deno.stdout.write(
+        Uint8Array.from(reverseControlCharactersBytesMap.cursorRight)
+      );
+
+      cursorPosition += 1;
+    }
   }
 
   // Disable raw mode while routing stdin to sub-processes.

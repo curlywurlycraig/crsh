@@ -142,7 +142,7 @@ while (true) {
         }
 
         incrementAndCheckCompletion();
-        return;
+        continue;
       }
 
       const withGlobsExpanded = await expandGlobs(
@@ -155,7 +155,7 @@ while (true) {
       } catch (err) {
         console.error("Failed to interpolate JS: ", err.toString());
         incrementAndCheckCompletion();
-        return;
+        continue;
       }
       const splitCommand = withInterpolatedJS.split(" ");
       const executable = splitCommand[0].trim();
@@ -179,7 +179,7 @@ while (true) {
           );
         } finally {
           incrementAndCheckCompletion();
-          return;
+          continue;
         }
       }
 
@@ -223,17 +223,24 @@ while (true) {
         p.status().then(async (computedStatus) => {
           await p.close();
           incrementAndCheckCompletion();
-          return;
         });
       } catch (err) {
         if (err instanceof Deno.errors.NotFound) {
           console.error(`Couldn't find command "${executable}"`);
+          incrementAndCheckCompletion();
+          continue;
         } else {
           console.error(`Failed to execute command: ${err.toString()}`);
+          incrementAndCheckCompletion();
+          continue;
         }
       }
     }
   });
 
-  await processPromise;
+  try {
+    await processPromise;
+  } catch (err) {
+    console.error(`craig it is this: ${err.toString()}`);
+  }
 }
