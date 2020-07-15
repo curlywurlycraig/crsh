@@ -11,5 +11,5 @@ export const multilineGutter = () => {
   const space = Array(promptLength() - 6)
     .fill(" ")
     .join("");
-  return gray(`${space}... ›`);
+  return gray(`${space}... › `);
 };

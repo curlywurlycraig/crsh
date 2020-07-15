@@ -179,7 +179,7 @@ export const cursorIsInFunctionOrQuotes = (string, cursorPosition) => {
   const unclosedQuotesRegex = /[^"]*"[^"]*$/g;
   const unclosedSingleQuotesRegex = /[^']*'[^']*$/g;
 
-  const upToPosition = string.slice(cursorPosition);
+  const upToPosition = string.slice(0, cursorPosition);
   if (
     unclosedFunctionRegex.exec(upToPosition) !== null ||
     unclosedQuotesRegex.exec(upToPosition) !== null ||
