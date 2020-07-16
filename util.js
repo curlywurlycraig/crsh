@@ -176,14 +176,18 @@ export const exec = async (command, args) => {
 
 export const cursorIsInFunctionOrQuotes = (string, cursorPosition) => {
   const unclosedFunctionRegex = /[^\{]*\{[^\}]*$/g;
-  const unclosedQuotesRegex = /[^"]*"[^"]*$/g;
-  const unclosedSingleQuotesRegex = /[^']*'[^']*$/g;
 
   const upToPosition = string.slice(0, cursorPosition);
+  const upToPositionAsList = [...upToPosition];
+  const isInQuotes =
+    upToPositionAsList.filter((c) => c === '"').length % 2 === 1;
+  const isInSingleQuotes =
+    upToPositionAsList.filter((c) => c === "'").length % 2 === 1;
+
   if (
     unclosedFunctionRegex.exec(upToPosition) !== null ||
-    unclosedQuotesRegex.exec(upToPosition) !== null ||
-    unclosedSingleQuotesRegex.exec(upToPosition) !== null
+    isInQuotes ||
+    isInSingleQuotes
   ) {
     return true;
   }
