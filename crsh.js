@@ -81,7 +81,7 @@ while (true) {
       ///////
       // Anonymous functions
       ///////
-      if (/^\(.*\) ?=> ?.*$/.test(withEnvVarsReplaced)) {
+      if (/^\(.*\) ?=> ?(.|\n)*$/.test(withEnvVarsReplaced)) {
         const lastOutput = new TextDecoder().decode(
           await Deno.readAll(lastIO.stdout)
         );

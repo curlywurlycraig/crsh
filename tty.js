@@ -1,6 +1,10 @@
 import { prompt, promptLength, multilineGutter } from "./prompt.js";
 import { complete } from "./tabCompletion.js";
-import { getTokenUnderCursor, cursorIsInFunctionOrQuotes } from "./util.js";
+import {
+  getTokenUnderCursor,
+  cursorIsInFunction,
+  cursorIsInQuotes,
+} from "./util.js";
 
 // Helpful reference: http://www.termsys.demon.co.uk/vtansi.htm#cursor
 // Another helpful reference: http://www.pitt.edu/~jcaretto/text/cleanup/twproae.html
@@ -147,7 +151,9 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "return") {
-      if (cursorIsInFunctionOrQuotes(userInput, cursorPosition)) {
+      const inFunction = cursorIsInFunction(userInput, cursorPosition);
+      const inQuotes = cursorIsInQuotes(userInput, cursorPosition);
+      if (inFunction || inQuotes) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
         );
@@ -156,14 +162,29 @@ export const readCommand = async () => {
           new TextEncoder().encode(`\n${multilineGutter()}`)
         );
 
+        if (inFunction) {
+          await Deno.stdout.write(
+            new TextEncoder().encode("  ") // Small indent for readability
+          );
+        }
+
         // Print remainder of line
 
-        // What about subsequent lines? I think this will be "dealt with"
+        // What about subsequent lines? I think this will take care of itself
 
         // What about navigating?
 
         // What about setting cursorPosition? (Probably just imagine userInput as a single sequence with \n characters in)
         //    i.e., don't need to track a cursor row. That's a purely visual thing
+
+        const additionalInput = inFunction ? "\n  " : "\n";
+        userInput =
+          userInput.slice(0, cursorPosition) +
+          additionalInput +
+          userInput.slice(cursorPosition, userInput.length);
+
+        cursorPosition += 1;
+
         continue;
       } else {
         await Deno.stdout.write(new TextEncoder().encode("\n"));

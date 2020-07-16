@@ -174,9 +174,15 @@ export const exec = async (command, args) => {
   return new TextDecoder().decode(resultByteArray);
 };
 
-export const cursorIsInFunctionOrQuotes = (string, cursorPosition) => {
+export const cursorIsInFunction = (string, cursorPosition) => {
   const unclosedFunctionRegex = /[^\{]*\{[^\}]*$/g;
 
+  const upToPosition = string.slice(0, cursorPosition);
+
+  return unclosedFunctionRegex.exec(upToPosition) !== null;
+};
+
+export const cursorIsInQuotes = (string, cursorPosition) => {
   const upToPosition = string.slice(0, cursorPosition);
   const upToPositionAsList = [...upToPosition];
   const isInQuotes =
@@ -184,13 +190,5 @@ export const cursorIsInFunctionOrQuotes = (string, cursorPosition) => {
   const isInSingleQuotes =
     upToPositionAsList.filter((c) => c === "'").length % 2 === 1;
 
-  if (
-    unclosedFunctionRegex.exec(upToPosition) !== null ||
-    isInQuotes ||
-    isInSingleQuotes
-  ) {
-    return true;
-  }
-
-  return false;
+  return isInQuotes || isInSingleQuotes;
 };
