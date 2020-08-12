@@ -180,7 +180,7 @@ export const readCommand = async () => {
           additionalInput +
           userInput.slice(cursorPosition, userInput.length);
 
-        cursorPosition += 3;
+        cursorPosition += 1 + indentLevel;
 
         continue;
       } else {
