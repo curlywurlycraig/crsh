@@ -98,6 +98,14 @@ export const rewriteLineAfterPosition = async (text, position) => {
   );
 };
 
+const addMultilineGutterToNewlines = (text) => {
+  const lines = text.split("\n");
+  const linesWithGutter = lines
+    .slice(1)
+    .map((line) => `${multilineGutter()}${line}`);
+  return [lines[0], ...linesWithGutter].join("\n");
+};
+
 export const replaceAllInput = async (text) => {
   await setCursorColumn(promptLength() + 1);
 
@@ -105,7 +113,9 @@ export const replaceAllInput = async (text) => {
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
   );
 
-  await Deno.stdout.write(new TextEncoder().encode(text));
+  await Deno.stdout.write(
+    new TextEncoder().encode(addMultilineGutterToNewlines(text))
+  );
 };
 
 // TODO Read history from a file
