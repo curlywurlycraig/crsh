@@ -251,6 +251,32 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "up") {
+      const userInputLines = userInput.split("\n");
+      const previousUserInputLines = userInput
+        .slice(0, cursorPosition)
+        .split("\n");
+
+      const hasPreviousLines = previousUserInputLines.length > 1;
+      if (hasPreviousLines) {
+        const currentLine =
+          previousUserInputLines[previousUserInputLines.length - 1];
+        const lastLine =
+          previousUserInputLines[previousUserInputLines.length - 2];
+
+        await Deno.stdout.write(
+          Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
+        );
+
+        const column = Math.min(currentLine.length, lastLine.length) + 1;
+        await setCursorColumn(promptLength() + column);
+        cursorPosition =
+          previousUserInputLines
+            .slice(0, previousUserInputLines.length - 2)
+            .join("\n").length + column;
+
+        continue;
+      }
+
       if (currentHistoryIndex <= 0) {
         continue;
       }
@@ -264,6 +290,33 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "down") {
+      const userInputLines = userInput.split("\n");
+      const nextUserInputLines = userInput
+        .slice(cursorPosition + 1)
+        .split("\n");
+      const previousUserInputLines = userInput
+        .slice(0, cursorPosition)
+        .split("\n");
+
+      const startOfCurrentLine =
+        previousUserInputLines[previousUserInputLines.length - 1];
+
+      const hasNextLines = nextUserInputLines.length > 1;
+      if (hasNextLines) {
+        const endOfCurrentLine = nextUserInputLines[0];
+        const nextLine = nextUserInputLines[1];
+
+        await Deno.stdout.write(
+          Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
+        );
+
+        const column = Math.min(startOfCurrentLine.length, nextLine.length);
+        await setCursorColumn(promptLength() + column + 1);
+        cursorPosition = cursorPosition + endOfCurrentLine.length + column + 2;
+
+        continue;
+      }
+
       if (currentHistoryIndex === history.length) {
         continue;
       }
