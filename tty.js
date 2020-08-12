@@ -51,7 +51,7 @@ export const performTabCompletion = async (
     resetCache
   );
 
-  setCursorColumn(promptLength() + 1);
+  await setCursorColumn(promptLength() + 1);
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
@@ -61,7 +61,7 @@ export const performTabCompletion = async (
   await Deno.stdout.write(new TextEncoder().encode(newInput));
 
   cursorPosition = tokenIndex + tokenLength;
-  setCursorColumn(promptLength() + cursorPosition + 1);
+  await setCursorColumn(promptLength() + cursorPosition + 1);
 
   return {
     newCursorPosition: tokenIndex + tokenLength,
@@ -69,14 +69,14 @@ export const performTabCompletion = async (
   };
 };
 
-export const setCursorPosition = (row, column) => {
+export const setCursorPosition = async (row, column) => {
   const positionSegment = new TextEncoder().encode(`${row};${column}H`);
-  Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
+  await Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
 };
 
-export const setCursorColumn = (column) => {
+export const setCursorColumn = async (column) => {
   const positionSegment = new TextEncoder().encode(`${column}G`);
-  Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
+  await Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
 };
 
 export const rewriteLineAfterPosition = async (text, position) => {
@@ -143,7 +143,7 @@ export const readCommand = async () => {
       userInput = "";
       cursorPosition = 0;
 
-      setCursorColumn(promptLength() + 1);
+      await setCursorColumn(promptLength() + 1);
 
       await rewriteLineAfterPosition(userInput, cursorPosition);
 
@@ -154,6 +154,8 @@ export const readCommand = async () => {
       const inFunction = cursorIsInFunction(userInput, cursorPosition);
       const inQuotes = cursorIsInQuotes(userInput, cursorPosition);
       if (inFunction || inQuotes) {
+        const indentLevel = inFunction ? 2 : 0;
+
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
         );
@@ -162,20 +164,15 @@ export const readCommand = async () => {
           new TextEncoder().encode(`\n${multilineGutter()}`)
         );
 
-        if (inFunction) {
-          await Deno.stdout.write(
-            new TextEncoder().encode("  ") // Small indent for readability
-          );
-        }
+        await Deno.stdout.write(
+          new TextEncoder().encode(new Array(indentLevel + 1).join(" "))
+        );
 
-        // Print remainder of line
+        await Deno.stdout.write(
+          new TextEncoder().encode(userInput.slice(cursorPosition))
+        );
 
-        // What about subsequent lines? I think this will take care of itself
-
-        // What about navigating?
-
-        // What about setting cursorPosition? (Probably just imagine userInput as a single sequence with \n characters in)
-        //    i.e., don't need to track a cursor row. That's a purely visual thing
+        await setCursorColumn(promptLength() + indentLevel + 1);
 
         const additionalInput = inFunction ? "\n  " : "\n";
         userInput =
@@ -183,7 +180,7 @@ export const readCommand = async () => {
           additionalInput +
           userInput.slice(cursorPosition, userInput.length);
 
-        cursorPosition += 1;
+        cursorPosition += 3;
 
         continue;
       } else {
@@ -288,7 +285,7 @@ export const readCommand = async () => {
         cursorPosition = previousTokenIndex;
       }
 
-      setCursorColumn(promptLength() + 1 + cursorPosition);
+      await setCursorColumn(promptLength() + 1 + cursorPosition);
       continue;
     }
 
@@ -311,19 +308,19 @@ export const readCommand = async () => {
         cursorPosition = nextTokenIndex;
       }
 
-      setCursorColumn(promptLength() + 1 + cursorPosition);
+      await setCursorColumn(promptLength() + 1 + cursorPosition);
       continue;
     }
 
     if (controlCharacter === "home") {
       cursorPosition = 0;
-      setCursorColumn(promptLength() + 1);
+      await setCursorColumn(promptLength() + 1);
       continue;
     }
 
     if (controlCharacter === "end") {
       cursorPosition = userInput.length;
-      setCursorColumn(promptLength() + 1 + userInput.length);
+      await setCursorColumn(promptLength() + 1 + userInput.length);
       continue;
     }
 

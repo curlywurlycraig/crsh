@@ -18,6 +18,7 @@ Determine what transformers to execute by reading the
 1. Something for JS errors. Print it nicely to stderr with colors.
 1. Other/missing commands. Maybe "did you mean" type message?
 
+* TODO Simplify installation and execution (make work on webstorm etc too)
 * TODO Rethink basic JS commands (ending with ;)
 * TODO Persist history
 * TODO Fuzzyfinder

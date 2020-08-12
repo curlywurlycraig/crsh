@@ -241,6 +241,6 @@ while (true) {
   try {
     await processPromise;
   } catch (err) {
-    console.error(`craig it is this: ${err.toString()}`);
+    console.error(err);
   }
 }
