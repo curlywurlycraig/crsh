@@ -91,7 +91,9 @@ export const rewriteLineAfterPosition = async (text, position) => {
   );
 
   // Rewrite text
-  await Deno.stdout.write(new TextEncoder().encode(text.slice(position)));
+  await Deno.stdout.write(
+    new TextEncoder().encode(addMultilineGutterToNewlines(text.slice(position)))
+  );
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.loadCursor)
@@ -181,8 +183,21 @@ export const readCommand = async () => {
         );
 
         await Deno.stdout.write(
-          new TextEncoder().encode(userInput.slice(cursorPosition))
+          new TextEncoder().encode(
+            addMultilineGutterToNewlines(userInput.slice(cursorPosition))
+          )
         );
+
+        const numberOfNewlines =
+          userInput.slice(cursorPosition).split("\n").length - 1;
+
+        for (let i = 0; i < numberOfNewlines; i++) {
+          await Deno.stdout.write(
+            Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
+          );
+        }
+
+        new TextEncoder().encode();
 
         await setCursorColumn(promptLength() + indentLevel + 1);
 
