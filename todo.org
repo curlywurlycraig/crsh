@@ -11,7 +11,7 @@ Define a JS/unix hybrid. Something like this:
 Any other statement should be eval'd in Deno."
 
 * TODO Custom transformers
-Determine what transformers to execute by reading the
+Determine what transformers to execute by reading the previous output
 
 * TODO Friendly helpful errors
 1. Something for transformers: "Looks like you are trying to use the json parser, but the previous output doesn't look like valid json."
@@ -41,6 +41,8 @@ Cases: stdout, in, err, files
 
 * TODO Background jobs
 
+* TODO Fix random extra line in ({ lines })
+* TODO Refactor cursor movement in tty.js
 * TODO Refactor the main file. Process execution is messy
 There are different cases (JS execution, process execution) that overlap a little here and there.
 Think about how it could be tidier

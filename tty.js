@@ -31,8 +31,9 @@ export const controlCharactersBytesMap = {
 export const reverseControlCharactersBytesMap = {
   eraseLine: [27, 91, 50, 75],
   cursorUp: [27, 91, 65],
-  cursorLeft: [27, 91, 68],
+  cursorDown: [27, 91, 66],
   cursorRight: [27, 91, 67],
+  cursorLeft: [27, 91, 68],
   eraseToEndOfLine: [27, 91, 75],
   saveCursor: [27, 91, 115],
   loadCursor: [27, 91, 117],
@@ -281,7 +282,22 @@ export const readCommand = async () => {
     if (controlCharacter === "left") {
       if (cursorPosition === 0) continue;
 
-      await Deno.stdout.write(relevantBuf);
+      if (userInput[cursorPosition - 1] === "\n") {
+        await Deno.stdout.write(
+          Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
+        );
+
+        const userInputLines = userInput.split("\n");
+        const previousUserInputLines = userInput
+          .slice(0, cursorPosition - 1)
+          .split("\n");
+        const lastLine =
+          previousUserInputLines[previousUserInputLines.length - 1];
+
+        await setCursorColumn(promptLength() + lastLine.length + 1);
+      } else {
+        await Deno.stdout.write(relevantBuf);
+      }
 
       cursorPosition--;
       continue;
@@ -290,7 +306,23 @@ export const readCommand = async () => {
     if (controlCharacter === "right") {
       if (cursorPosition === userInput.length) continue;
 
-      await Deno.stdout.write(relevantBuf);
+      if (
+        userInput[cursorPosition] === "\n" &&
+        userInput.length > cursorPosition + 1
+      ) {
+        await Deno.stdout.write(
+          Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
+        );
+
+        const userInputLines = userInput.split("\n");
+        const nextUserInputLines = userInput.slice(cursorPosition).split("\n");
+        const nextLine = nextUserInputLines[0];
+
+        await setCursorColumn(promptLength() + nextLine.length + 1);
+      } else {
+        await Deno.stdout.write(relevantBuf);
+      }
+
       cursorPosition++;
       continue;
     }
