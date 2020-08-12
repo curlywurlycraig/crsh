@@ -1,4 +1,6 @@
 * TODO Support multiline
+* TODO Fix issues at edges (when cursor is next to a newline character)
+* TODO Refactor tty.js. Look at "moveCursorUp" and apply that approach elsewhere too
 * TODO Fancier globs
 e.g.
 
