@@ -55,7 +55,9 @@ export const getCursorPositionAfterMoveUp = (text, cursorPosition) => {
   const previousLine = getPreviousLine(text, cursorPosition);
   const newColumn = Math.min(currentCursorColumn, previousLine.length);
 
-  return cursorPosition - previousLine.length - currentCursorColumn + newColumn;
+  return (
+    cursorPosition - previousLine.length - currentCursorColumn + newColumn - 1
+  );
 };
 
 export const getCursorPositionAfterMoveDown = (text, cursorPosition) => {
@@ -63,5 +65,5 @@ export const getCursorPositionAfterMoveDown = (text, cursorPosition) => {
   const nextLine = getNextLine(text, cursorPosition);
   const newColumn = Math.min(currentCursorColumn, nextLine.length);
   const restOfLine = getRestOfLine(text, cursorPosition);
-  return currentCursorColumn + restOfLine.length + newColumn + 2;
+  return currentCursorColumn + restOfLine.length + newColumn + 1;
 };

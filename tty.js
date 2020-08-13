@@ -62,7 +62,7 @@ export const performTabCompletion = async (
     resetCache
   );
 
-  await setCursorColumn(promptLength() + 1);
+  await setCursorColumn(promptLength());
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
@@ -72,7 +72,7 @@ export const performTabCompletion = async (
   await Deno.stdout.write(new TextEncoder().encode(newInput));
 
   cursorPosition = tokenIndex + tokenLength;
-  await setCursorColumn(promptLength() + cursorPosition + 1);
+  await setCursorColumn(promptLength() + cursorPosition);
 
   return {
     newCursorPosition: tokenIndex + tokenLength,
@@ -86,7 +86,7 @@ export const setCursorPosition = async (row, column) => {
 };
 
 export const setCursorColumn = async (column) => {
-  const positionSegment = new TextEncoder().encode(`${column}G`);
+  const positionSegment = new TextEncoder().encode(`${column + 1}G`);
   await Deno.stdout.write(Uint8Array.from([27, 91, ...positionSegment]));
 };
 
@@ -131,7 +131,7 @@ export const rewriteFromPrompt = async (
   newUserInput,
   cursorPosition
 ) => {
-  await setCursorColumn(promptLength() + 1);
+  await setCursorColumn(promptLength());
 
   await moveCursorUp(getCursorRow(currentUserInput, cursorPosition));
 
@@ -221,7 +221,7 @@ export const readCommand = async () => {
 
         new TextEncoder().encode();
 
-        await setCursorColumn(promptLength() + indentLevel + 1);
+        await setCursorColumn(promptLength() + indentLevel);
 
         const additionalInput = inFunction ? "\n  " : "\n";
         userInput =
@@ -250,7 +250,7 @@ export const readCommand = async () => {
         );
 
         const lastLine = getPreviousLine(userInput, cursorPosition);
-        await setCursorColumn(promptLength() + lastLine.length + 1);
+        await setCursorColumn(promptLength() + lastLine.length);
 
         userInput =
           userInput.slice(0, cursorPosition - 1) +
@@ -364,7 +364,7 @@ export const readCommand = async () => {
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        const column = getPreviousLine(userInput, cursorPosition).length + 1;
+        const column = getPreviousLine(userInput, cursorPosition).length;
         await setCursorColumn(promptLength() + column);
       } else {
         await Deno.stdout.write(relevantBuf);
@@ -385,7 +385,7 @@ export const readCommand = async () => {
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
         );
 
-        await setCursorColumn(promptLength() + 1);
+        await setCursorColumn(promptLength());
       } else {
         await Deno.stdout.write(relevantBuf);
       }
@@ -410,7 +410,7 @@ export const readCommand = async () => {
         cursorPosition = previousTokenIndex;
       }
 
-      await setCursorColumn(promptLength() + 1 + cursorPosition);
+      await setCursorColumn(promptLength() + cursorPosition);
       continue;
     }
 
@@ -433,19 +433,19 @@ export const readCommand = async () => {
         cursorPosition = nextTokenIndex;
       }
 
-      await setCursorColumn(promptLength() + 1 + cursorPosition);
+      await setCursorColumn(promptLength() + cursorPosition);
       continue;
     }
 
     if (controlCharacter === "home") {
       cursorPosition = 0;
-      await setCursorColumn(promptLength() + 1);
+      await setCursorColumn(promptLength());
       continue;
     }
 
     if (controlCharacter === "end") {
       cursorPosition = userInput.length;
-      await setCursorColumn(promptLength() + 1 + userInput.length);
+      await setCursorColumn(promptLength() + userInput.length);
       continue;
     }
 
