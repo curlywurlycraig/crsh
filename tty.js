@@ -180,7 +180,7 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "ctrlc") {
-      await rewriteFromPrompt(userInput, "", 0);
+      await rewriteFromPrompt(userInput, "", cursorPosition);
 
       userInput = "";
       cursorPosition = 0;
@@ -300,7 +300,6 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "up") {
-      const userInputLines = userInput.split("\n");
       const previousUserInputLines = userInput
         .slice(0, cursorPosition)
         .split("\n");
@@ -321,7 +320,9 @@ export const readCommand = async () => {
         cursorPosition =
           previousUserInputLines
             .slice(0, previousUserInputLines.length - 2)
-            .join("\n").length + column;
+            .join("\n").length +
+          column -
+          1;
 
         continue;
       }
