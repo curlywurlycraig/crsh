@@ -1,6 +1,14 @@
 import { prompt, promptLength, multilineGutter } from "./prompt.js";
 import { complete } from "./tabCompletion.js";
 import {
+  getPreviousLine,
+  getNextLine,
+  getCursorPositionAfterMoveUp,
+  getCursorPositionAfterMoveDown,
+  getCursorColumn,
+  getCursorRow,
+} from "./cursor.js";
+import {
   getTokenUnderCursor,
   cursorIsInFunction,
   cursorIsInQuotes,
@@ -108,16 +116,6 @@ export const rewriteLineAfterPosition = async (text, position) => {
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.loadCursor)
   );
-};
-
-const getCursorRow = (text, cursorPosition) => {
-  const upToCursor = text.slice(0, cursorPosition - 1);
-  return getNumberOfRows(upToCursor) - 1;
-};
-
-const getNumberOfRows = (text) => {
-  const result = text.split("\n").length;
-  return result;
 };
 
 const addMultilineGutterToNewlines = (text) => {
@@ -251,13 +249,7 @@ export const readCommand = async () => {
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        const userInputLines = userInput.split("\n");
-        const previousUserInputLines = userInput
-          .slice(0, cursorPosition - 1)
-          .split("\n");
-        const lastLine =
-          previousUserInputLines[previousUserInputLines.length - 1];
-
+        const lastLine = getPreviousLine(userInput, cursorPosition);
         await setCursorColumn(promptLength() + lastLine.length + 1);
 
         userInput =
@@ -266,8 +258,7 @@ export const readCommand = async () => {
 
         cursorPosition--;
 
-        const userInputAfterCursor = userInput.slice(cursorPosition);
-        await rewriteLineAfterPosition(userInputAfterCursor, cursorPosition);
+        await rewriteLineAfterPosition(userInput, cursorPosition);
       } else {
         userInput =
           userInput.slice(0, cursorPosition - 1) +
@@ -300,29 +291,20 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "up") {
-      const previousUserInputLines = userInput
-        .slice(0, cursorPosition)
-        .split("\n");
+      const lastLine = getPreviousLine(userInput, cursorPosition);
 
-      const hasPreviousLines = previousUserInputLines.length > 1;
-      if (hasPreviousLines) {
-        const currentLine =
-          previousUserInputLines[previousUserInputLines.length - 1];
-        const lastLine =
-          previousUserInputLines[previousUserInputLines.length - 2];
-
+      if (lastLine) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        const column = Math.min(currentLine.length, lastLine.length) + 1;
+        cursorPosition = getCursorPositionAfterMoveUp(
+          userInput,
+          cursorPosition
+        );
+
+        const column = getCursorColumn(userInput, cursorPosition);
         await setCursorColumn(promptLength() + column);
-        cursorPosition =
-          previousUserInputLines
-            .slice(0, previousUserInputLines.length - 2)
-            .join("\n").length +
-          column -
-          1;
 
         continue;
       }
@@ -341,29 +323,19 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "down") {
-      const userInputLines = userInput.split("\n");
-      const nextUserInputLines = userInput
-        .slice(cursorPosition + 1)
-        .split("\n");
-      const previousUserInputLines = userInput
-        .slice(0, cursorPosition)
-        .split("\n");
-
-      const startOfCurrentLine =
-        previousUserInputLines[previousUserInputLines.length - 1];
-
-      const hasNextLines = nextUserInputLines.length > 1;
-      if (hasNextLines) {
-        const endOfCurrentLine = nextUserInputLines[0];
-        const nextLine = nextUserInputLines[1];
-
+      const nextLine = getNextLine(userInput, cursorPosition);
+      if (nextLine) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
         );
 
-        const column = Math.min(startOfCurrentLine.length, nextLine.length);
-        await setCursorColumn(promptLength() + column + 1);
-        cursorPosition = cursorPosition + endOfCurrentLine.length + column + 2;
+        cursorPosition = getCursorPositionAfterMoveDown(
+          userInput,
+          cursorPosition
+        );
+
+        const column = getCursorColumn(userInput, cursorPosition);
+        await setCursorColumn(promptLength() + column);
 
         continue;
       }
@@ -392,14 +364,8 @@ export const readCommand = async () => {
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        const userInputLines = userInput.split("\n");
-        const previousUserInputLines = userInput
-          .slice(0, cursorPosition - 1)
-          .split("\n");
-        const lastLine =
-          previousUserInputLines[previousUserInputLines.length - 1];
-
-        await setCursorColumn(promptLength() + lastLine.length + 1);
+        const column = getPreviousLine(userInput, cursorPosition).length + 1;
+        await setCursorColumn(promptLength() + column);
       } else {
         await Deno.stdout.write(relevantBuf);
       }
@@ -419,11 +385,7 @@ export const readCommand = async () => {
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
         );
 
-        const userInputLines = userInput.split("\n");
-        const nextUserInputLines = userInput.slice(cursorPosition).split("\n");
-        const nextLine = nextUserInputLines[0];
-
-        await setCursorColumn(promptLength() + nextLine.length + 1);
+        await setCursorColumn(promptLength() + 1);
       } else {
         await Deno.stdout.write(relevantBuf);
       }
