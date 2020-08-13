@@ -4,7 +4,7 @@ export const getNumberOfRows = (text) => {
 };
 
 export const getCursorRow = (text, cursorPosition) => {
-  const upToCursor = text.slice(0, cursorPosition - 1);
+  const upToCursor = text.slice(0, cursorPosition);
   return getNumberOfRows(upToCursor) - 1;
 };
 
