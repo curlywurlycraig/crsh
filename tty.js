@@ -195,7 +195,7 @@ export const readCommand = async () => {
         const indentLevel = inFunction ? 2 : 0;
 
         await Deno.stdout.write(
-          Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
+          Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
         );
 
         await Deno.stdout.write(
