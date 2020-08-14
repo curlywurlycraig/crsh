@@ -44,8 +44,8 @@ export const reverseControlCharactersBytesMap = {
   cursorLeft: [27, 91, 68],
   eraseToEndOfLine: [27, 91, 75],
   eraseToEndOfScreen: [27, 91, 74],
-  saveCursor: [27, 91, 115],
-  loadCursor: [27, 91, 117],
+  saveCursor: [27, 55],
+  loadCursor: [27, 56],
   queryCursorPosition: [27, 91, 54, 110],
 };
 
