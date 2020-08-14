@@ -293,7 +293,7 @@ export const readCommand = async () => {
     if (controlCharacter === "up") {
       const lastLine = getPreviousLine(userInput, cursorPosition);
 
-      if (lastLine) {
+      if (lastLine !== null) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
@@ -324,15 +324,17 @@ export const readCommand = async () => {
 
     if (controlCharacter === "down") {
       const nextLine = getNextLine(userInput, cursorPosition);
-      if (nextLine) {
+      if (nextLine !== null) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
         );
 
+        // console.log("cursor position before ", cursorPosition);
         cursorPosition = getCursorPositionAfterMoveDown(
           userInput,
           cursorPosition
         );
+        // console.log("cursor position after ", cursorPosition);
 
         const column = getCursorColumn(userInput, cursorPosition);
         await setCursorColumn(promptLength() + column);

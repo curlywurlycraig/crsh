@@ -65,5 +65,5 @@ export const getCursorPositionAfterMoveDown = (text, cursorPosition) => {
   const nextLine = getNextLine(text, cursorPosition);
   const newColumn = Math.min(currentCursorColumn, nextLine.length);
   const restOfLine = getRestOfLine(text, cursorPosition);
-  return currentCursorColumn + restOfLine.length + newColumn + 1;
+  return cursorPosition + restOfLine.length + newColumn + 1;
 };
