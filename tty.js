@@ -383,7 +383,7 @@ export const readCommand = async () => {
 
       if (
         userInput[cursorPosition] === "\n" &&
-        userInput.length > cursorPosition + 1
+        cursorPosition < userInput.length
       ) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
