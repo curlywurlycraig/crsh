@@ -67,3 +67,14 @@ export const getCursorPositionAfterMoveDown = (text, cursorPosition) => {
   const restOfLine = getRestOfLine(text, cursorPosition);
   return cursorPosition + restOfLine.length + newColumn + 1;
 };
+
+export const getPositionAtStartOfCurrentLine = (text, cursorPosition) => {
+  const textToCurrentPosition = text.slice(0, cursorPosition);
+  const linesToNow = textToCurrentPosition.split("\n");
+  const linesExceptCurrent = linesToNow.slice(0, linesToNow.length - 1);
+  return linesExceptCurrent.join("\n").length + 1;
+};
+
+export const getPositionAtEndOfCurrentLine = (text, cursorPosition) => {
+  return getRestOfLine(text, cursorPosition).length + cursorPosition;
+};

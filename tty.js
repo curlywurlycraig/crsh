@@ -7,6 +7,8 @@ import {
   getCursorPositionAfterMoveDown,
   getCursorColumn,
   getCursorRow,
+  getPositionAtStartOfCurrentLine,
+  getPositionAtEndOfCurrentLine,
 } from "./cursor.js";
 import {
   getTokenUnderCursor,
@@ -440,14 +442,21 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "home") {
-      cursorPosition = 0;
-      await setCursorColumn(promptLength());
+      cursorPosition = getPositionAtStartOfCurrentLine(
+        userInput,
+        cursorPosition
+      );
+      await setCursorColumn(
+        promptLength() + getCursorColumn(userInput, cursorPosition)
+      );
       continue;
     }
 
     if (controlCharacter === "end") {
-      cursorPosition = userInput.length;
-      await setCursorColumn(promptLength() + userInput.length);
+      cursorPosition = getPositionAtEndOfCurrentLine(userInput, cursorPosition);
+      await setCursorColumn(
+        promptLength() + getCursorColumn(userInput, cursorPosition)
+      );
       continue;
     }
 
