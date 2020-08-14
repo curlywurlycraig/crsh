@@ -1,6 +1,9 @@
-* TODO Fix random extra line in ({ lines })
-* TODO Make it possible to save functions quickly
 * TODO Set PATH (and others) at startup
+- [ ] Make run() return the output when executed manually.
+* TODO Make it possible to do "run('ls | grep thing')" inside anon functions.
+Current issue is that | is split by the parser too eagerly
+
+* TODO Make it possible to save functions quickly
 * TODO Fancier globs
 e.g.
 

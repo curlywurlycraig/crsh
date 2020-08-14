@@ -11,9 +11,10 @@ import {
   expandHome,
 } from "./util.js";
 
-export const run = (userInput) => {
+export const run = (userInput, isTTY) => {
   return new Promise(async (resolve, reject) => {
     let completedProcesses = 0;
+    let finalResult;
 
     if (userInput.length === 0) {
       resolve();
@@ -31,7 +32,7 @@ export const run = (userInput) => {
       } catch (err) {
         console.error(err.toString());
       }
-      resolve();
+      resolve(result);
       return;
     }
 
@@ -46,17 +47,17 @@ export const run = (userInput) => {
 
     const commands = rawCommands.split("|");
 
-    const incrementAndCheckCompletion = () => {
-      completedProcesses += 1;
-      if (completedProcesses >= commands.length) {
-        resolve();
-        return;
-      }
-    };
-
     const outputFile = outputFilename
       ? await Deno.open(outputFilename, { write: true, create: true })
       : null;
+
+    const incrementAndCheckCompletion = async () => {
+      completedProcesses += 1;
+      if (completedProcesses >= commands.length) {
+        resolve(finalResult?.trim());
+        return;
+      }
+    };
 
     let lastIO = {
       stdin: new StringWriter(),
@@ -124,6 +125,10 @@ export const run = (userInput) => {
             stdin: new StringWriter(),
           };
 
+          if (isLast) {
+            finalResult = nextContent;
+          }
+
           if (isLast && outputFile === null) {
             await Deno.stdout.write(
               new TextEncoder().encode(`${nextContent}\n`)
@@ -138,7 +143,7 @@ export const run = (userInput) => {
           console.error(`Failed to execute command: ${err.toString()}`);
         }
 
-        incrementAndCheckCompletion();
+        await incrementAndCheckCompletion();
         continue;
       }
 
@@ -151,7 +156,7 @@ export const run = (userInput) => {
         withInterpolatedJS = evalAndInterpolateJS(withGlobsExpanded);
       } catch (err) {
         console.error("Failed to interpolate JS: ", err.toString());
-        incrementAndCheckCompletion();
+        await incrementAndCheckCompletion();
         continue;
       }
       const splitCommand = withInterpolatedJS.split(" ");
@@ -170,29 +175,35 @@ export const run = (userInput) => {
             stderr: new StringReader(""),
             stdin: new StringWriter(),
           };
+
+          if (isLast) {
+            finalResult = nextContent;
+          }
         } catch (err) {
           console.error(
             `Failed to execute command ${executable}: ${err.toString()}`
           );
         } finally {
-          incrementAndCheckCompletion();
+          await incrementAndCheckCompletion();
           continue;
         }
       }
 
       ///////
-      // Actual process
+      // Unix process
       ///////
       try {
         if (defaultExtraUnixArgs[executable] !== undefined) {
           args = defaultExtraUnixArgs[executable](args);
         }
 
+        const shouldInheritStdout = isLast && outputFile === null && isTTY;
+
         // TODO Support stderr pipes, and also file output
         const p = Deno.run({
           cmd: [executable, ...args],
           stdin: isFirst ? "inherit" : "piped",
-          stdout: isLast && outputFile === null ? "inherit" : "piped",
+          stdout: shouldInheritStdout ? "inherit" : "piped",
           stderr: isLast ? "inherit" : "piped",
         });
 
@@ -211,6 +222,10 @@ export const run = (userInput) => {
           await outputFile.close();
         }
 
+        if (isLast && !isTTY) {
+          finalResult = new TextDecoder().decode(await Deno.readAll(p.stdout));
+        }
+
         lastIO = {
           stdout: p.stdout,
           stdin: p.stdin,
@@ -219,16 +234,16 @@ export const run = (userInput) => {
 
         p.status().then(async (computedStatus) => {
           await p.close();
-          incrementAndCheckCompletion();
+          await incrementAndCheckCompletion();
         });
       } catch (err) {
         if (err instanceof Deno.errors.NotFound) {
           console.error(`Couldn't find command "${executable}"`);
-          incrementAndCheckCompletion();
+          await incrementAndCheckCompletion();
           continue;
         } else {
           console.error(`Failed to execute command: ${err.toString()}`);
-          incrementAndCheckCompletion();
+          await incrementAndCheckCompletion();
           continue;
         }
       }
