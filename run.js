@@ -102,8 +102,8 @@ export const run = (userInput) => {
         // This can be done by somehow setting the stdout for this execution.
         // How can I do that?
         try {
-          const func = eval(withEnvVarsReplaced);
-          const result = func({
+          const func = eval(`async ${withEnvVarsReplaced}`);
+          const result = await func({
             raw: lastOutput,
             lines,
             json,
