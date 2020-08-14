@@ -94,7 +94,8 @@ while (true) {
         } finally {
         }
 
-        const lines = lastOutput.split("\n");
+        const unslicedLines = lastOutput.split("\n");
+        const lines = unslicedLines.slice(0, unslicedLines.length - 1);
 
         // TODO Consider supporting custom transformers here
         // e.g. make it easy to search if the result looked like a DOM node.
