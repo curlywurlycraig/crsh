@@ -5,12 +5,12 @@ export const startup = async () => {
 
   const paths = [
     `${home}/go/bin`,
-    `/usr/local/sbin`,
     `${home}/.yarn/bin`,
     `${home}/.deno/bin`,
     `${home}/.cargo/bin`,
     `${home}/Documents/google-cloud-sdk/bin`,
     `/usr/local/bin`,
+    `/usr/local/sbin`,
     `/usr/bin`,
     `/bin`,
     `/usr/sbin`,
@@ -19,5 +19,5 @@ export const startup = async () => {
 
   const pathString = paths.join(":");
 
-  run(`export PATH=$PATH:${pathString}`);
+  await run(`export PATH=$PATH:${pathString}`);
 };
