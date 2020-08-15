@@ -4,6 +4,7 @@ import {
   multilineGutter,
   reverseISearchPrompt,
 } from "./prompt.js";
+import searchHistory from "./searchHistory.js";
 import { complete } from "./tabCompletion.js";
 import {
   getPreviousLine,
@@ -14,6 +15,7 @@ import {
   getCursorRow,
   getPositionAtStartOfCurrentLine,
   getPositionAtEndOfCurrentLine,
+  getNumberOfRows,
 } from "./cursor.js";
 import {
   getTokenUnderCursor,
@@ -76,7 +78,7 @@ export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
 
   await setCursorColumn(promptLength() + buffer.cursorPosition);
 
-  buffer.cursorPosition = tokenIndex + tokenLength;
+  buffer.cursorPosition = tokenIndex;
   buffer.text = newInput;
 };
 
@@ -176,6 +178,7 @@ export const readCommand = async () => {
 
   let tabIndex = -1;
   let isReverseISearching = false;
+  let reverseISearchIndex = 0;
   let currentBuffer = commandBuffer;
 
   while (true) {
@@ -551,6 +554,22 @@ export const readCommand = async () => {
       );
 
       currentBuffer.cursorPosition += 1;
+    }
+
+    if (isReverseISearching) {
+      const match = searchHistory(
+        history,
+        currentBuffer.text,
+        reverseISearchIndex
+      );
+      if (match) {
+        await Deno.stdout.write(
+          new TextEncoder().encode(addMultilineGutterToNewlines(`\n${match}`))
+        );
+
+        await moveCursorUp(getNumberOfRows(match));
+        await setCursorColumn(promptLength() + currentBuffer.cursorPosition);
+      }
     }
   }
 

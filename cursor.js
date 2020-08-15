@@ -76,7 +76,8 @@ export const getPositionAtStartOfCurrentLine = (buffer) => {
   const textToCurrentPosition = buffer.text.slice(0, buffer.cursorPosition);
   const linesToNow = textToCurrentPosition.split("\n");
   const linesExceptCurrent = linesToNow.slice(0, linesToNow.length - 1);
-  return linesExceptCurrent.join("\n").length + 1;
+  const result = linesExceptCurrent.join("\n").length + 1;
+  return result === 1 ? 0 : result;
 };
 
 export const getPositionAtEndOfCurrentLine = (buffer) => {
