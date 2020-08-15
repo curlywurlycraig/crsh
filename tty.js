@@ -497,6 +497,10 @@ export const readCommand = async () => {
           );
         },
         any: async () => {
+          if (!currentBuffer.text) {
+            return;
+          }
+
           const match = await doSearchAndUpdateResults(
             currentBuffer,
             history,
