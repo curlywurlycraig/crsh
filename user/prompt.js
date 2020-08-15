@@ -6,7 +6,8 @@ export const prompt = () => {
 };
 
 export const reverseISearch = () => {
-  return blue("search › ");
+  const searchString = blue("search");
+  return `${searchString} › `;
 };
 
 export const multilineGutter = () => {
