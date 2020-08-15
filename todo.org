@@ -1,10 +1,4 @@
-* TODO Reverse-i search
-- [ ] Do a bit of refactoring.
-1. tty.js should use a map to deal with the different possible inputs.
-2. Utility functions for managing the cursor position should be in cursor.js
-3. Make a clearer boundary between cursorPosition (index) and the actual term emulator cursor
-   In other words, keep data and display separate.
-
+* TODO Persist history
 * TODO Make it possible to do "run('ls | grep thing')" inside anon functions.
 Current issue is that | is split by the parser too eagerly
 
@@ -30,7 +24,6 @@ Determine what transformers to execute by reading the previous output
 
 * TODO Simplify installation and execution (make work on webstorm etc too)
 * TODO Rethink basic JS commands (ending with ;)
-* TODO Persist history
 * TODO Fuzzyfinder
 * TODO Surface JS syntax errors while writing
 * TODO Shortcut to re-run current JS snippet with previous output and show result
