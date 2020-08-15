@@ -96,16 +96,19 @@ export const expandGlob = async (token) => {
   return filesInCurrentDir;
 };
 
-export const getTokenUnderCursor = (stringInput, cursorIndex) => {
+export const getTokenUnderCursor = ({ text, cursorPosition }) => {
   const tokenRegex = /[^ ]+/g;
 
-  let matchResult = tokenRegex.exec(stringInput);
+  let matchResult = tokenRegex.exec(text);
 
   while (matchResult !== null) {
     const token = matchResult[0];
     const tokenIndex = matchResult.index;
 
-    if (tokenIndex <= cursorIndex && tokenIndex + token.length >= cursorIndex) {
+    if (
+      tokenIndex <= cursorPosition &&
+      tokenIndex + token.length >= cursorPosition
+    ) {
       // console.log("token is ", token, tokenIndex);
       return {
         token,
@@ -113,12 +116,12 @@ export const getTokenUnderCursor = (stringInput, cursorIndex) => {
       };
     }
 
-    matchResult = tokenRegex.exec(stringInput);
+    matchResult = tokenRegex.exec(text);
   }
 
   return {
     token: "",
-    tokenIndex: cursorIndex,
+    tokenIndex: cursorPosition,
   };
 };
 
@@ -174,16 +177,16 @@ export const exec = async (command, args) => {
   return new TextDecoder().decode(resultByteArray);
 };
 
-export const cursorIsInFunction = (string, cursorPosition) => {
+export const cursorIsInFunction = ({ text, cursorPosition }) => {
   const unclosedFunctionRegex = /[^\{]*\{[^\}]*$/g;
 
-  const upToPosition = string.slice(0, cursorPosition);
+  const upToPosition = text.slice(0, cursorPosition);
 
   return unclosedFunctionRegex.exec(upToPosition) !== null;
 };
 
-export const cursorIsInQuotes = (string, cursorPosition) => {
-  const upToPosition = string.slice(0, cursorPosition);
+export const cursorIsInQuotes = ({ text, cursorPosition }) => {
+  const upToPosition = text.slice(0, cursorPosition);
   const upToPositionAsList = [...upToPosition];
   const isInQuotes =
     upToPositionAsList.filter((c) => c === '"').length % 2 === 1;

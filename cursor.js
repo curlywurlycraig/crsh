@@ -3,13 +3,13 @@ export const getNumberOfRows = (text) => {
   return result;
 };
 
-export const getCursorRow = (text, cursorPosition) => {
-  const upToCursor = text.slice(0, cursorPosition);
+export const getCursorRow = (buffer) => {
+  const upToCursor = buffer.text.slice(0, buffer.cursorPosition);
   return getNumberOfRows(upToCursor) - 1;
 };
 
-export const getPreviousLine = (text, cursorPosition) => {
-  const upToCursor = text.slice(0, cursorPosition);
+export const getPreviousLine = (buffer) => {
+  const upToCursor = buffer.text.slice(0, buffer.cursorPosition);
   const asLines = upToCursor.split("\n");
 
   if (asLines.length < 2) {
@@ -19,8 +19,8 @@ export const getPreviousLine = (text, cursorPosition) => {
   return asLines[asLines.length - 2];
 };
 
-export const getNextLine = (text, cursorPosition) => {
-  const beyondCursor = text.slice(cursorPosition);
+export const getNextLine = (buffer) => {
+  const beyondCursor = buffer.text.slice(buffer.cursorPosition);
   const asLines = beyondCursor.split("\n");
 
   if (asLines.length < 2) {
@@ -30,51 +30,55 @@ export const getNextLine = (text, cursorPosition) => {
   return asLines[1];
 };
 
-export const getLineUpToCursor = (text, cursorPosition) => {
-  const upToCursor = text.slice(0, cursorPosition);
+export const getLineUpToCursor = (buffer) => {
+  const upToCursor = buffer.text.slice(0, buffer.cursorPosition);
   const asLines = upToCursor.split("\n");
   return asLines[asLines.length - 1];
 };
 
-export const getCurrentLine = (Text, cursorPosition) => {
-  return getLineUpToCursor() + getRestOfLine();
+export const getCurrentLine = (buffer) => {
+  return getLineUpToCursor(buffer) + getRestOfLine(buffer);
 };
 
-export const getRestOfLine = (text, cursorPosition) => {
-  const upToCursor = text.slice(cursorPosition);
+export const getRestOfLine = (buffer) => {
+  const upToCursor = buffer.text.slice(buffer.cursorPosition);
   const asLines = upToCursor.split("\n");
   return asLines[0];
 };
 
-export const getCursorColumn = (text, cursorPosition) => {
-  return getLineUpToCursor(text, cursorPosition).length;
+export const getCursorColumn = (buffer) => {
+  return getLineUpToCursor(buffer).length;
 };
 
-export const getCursorPositionAfterMoveUp = (text, cursorPosition) => {
-  const currentCursorColumn = getCursorColumn(text, cursorPosition);
-  const previousLine = getPreviousLine(text, cursorPosition);
+export const getCursorPositionAfterMoveUp = (buffer) => {
+  const currentCursorColumn = getCursorColumn(buffer);
+  const previousLine = getPreviousLine(buffer);
   const newColumn = Math.min(currentCursorColumn, previousLine.length);
 
   return (
-    cursorPosition - previousLine.length - currentCursorColumn + newColumn - 1
+    buffer.cursorPosition -
+    previousLine.length -
+    currentCursorColumn +
+    newColumn -
+    1
   );
 };
 
-export const getCursorPositionAfterMoveDown = (text, cursorPosition) => {
-  const currentCursorColumn = getCursorColumn(text, cursorPosition);
-  const nextLine = getNextLine(text, cursorPosition);
+export const getCursorPositionAfterMoveDown = (buffer) => {
+  const currentCursorColumn = getCursorColumn(buffer);
+  const nextLine = getNextLine(buffer);
   const newColumn = Math.min(currentCursorColumn, nextLine.length);
-  const restOfLine = getRestOfLine(text, cursorPosition);
-  return cursorPosition + restOfLine.length + newColumn + 1;
+  const restOfLine = getRestOfLine(buffer);
+  return buffer.cursorPosition + restOfLine.length + newColumn + 1;
 };
 
-export const getPositionAtStartOfCurrentLine = (text, cursorPosition) => {
-  const textToCurrentPosition = text.slice(0, cursorPosition);
+export const getPositionAtStartOfCurrentLine = (buffer) => {
+  const textToCurrentPosition = buffer.text.slice(0, buffer.cursorPosition);
   const linesToNow = textToCurrentPosition.split("\n");
   const linesExceptCurrent = linesToNow.slice(0, linesToNow.length - 1);
   return linesExceptCurrent.join("\n").length + 1;
 };
 
-export const getPositionAtEndOfCurrentLine = (text, cursorPosition) => {
-  return getRestOfLine(text, cursorPosition).length + cursorPosition;
+export const getPositionAtEndOfCurrentLine = (buffer) => {
+  return getRestOfLine(buffer).length + buffer.cursorPosition;
 };

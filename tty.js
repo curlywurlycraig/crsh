@@ -1,4 +1,9 @@
-import { prompt, promptLength, multilineGutter } from "./prompt.js";
+import {
+  prompt,
+  promptLength,
+  multilineGutter,
+  reverseISearchPrompt,
+} from "./prompt.js";
 import { complete } from "./tabCompletion.js";
 import {
   getPreviousLine,
@@ -25,6 +30,8 @@ export const controlCharactersBytesMap = {
   "4": "ctrld",
   "9": "tab",
   "13": "return",
+  "18": "ctrlr",
+  "27": "escape",
   "127": "backspace",
   "27,91,68": "left",
   "27,91,67": "right",
@@ -51,15 +58,9 @@ export const reverseControlCharactersBytesMap = {
   queryCursorPosition: [27, 91, 54, 110],
 };
 
-export const performTabCompletion = async (
-  userInput,
-  cursorPosition,
-  tabIndex,
-  resetCache
-) => {
+export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
   const { newInput, tokenIndex, tokenLength } = await complete(
-    userInput,
-    cursorPosition,
+    buffer,
     tabIndex,
     resetCache
   );
@@ -73,13 +74,10 @@ export const performTabCompletion = async (
   // Rewrite text
   await Deno.stdout.write(new TextEncoder().encode(newInput));
 
-  cursorPosition = tokenIndex + tokenLength;
-  await setCursorColumn(promptLength() + cursorPosition);
+  await setCursorColumn(promptLength() + buffer.cursorPosition);
 
-  return {
-    newCursorPosition: tokenIndex + tokenLength,
-    newUserInput: newInput,
-  };
+  buffer.cursorPosition = tokenIndex + tokenLength;
+  buffer.text = newInput;
 };
 
 export const setCursorPosition = async (row, column) => {
@@ -101,7 +99,7 @@ export const moveCursorUp = async (rowCount) => {
   await Deno.stdout.write(Uint8Array.from([27, 91, ...movementSegment]));
 };
 
-export const rewriteLineAfterPosition = async (text, position) => {
+export const rewriteLineAfterCursor = async ({ text, cursorPosition }) => {
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.saveCursor)
   );
@@ -112,7 +110,9 @@ export const rewriteLineAfterPosition = async (text, position) => {
 
   // Rewrite text
   await Deno.stdout.write(
-    new TextEncoder().encode(addMultilineGutterToNewlines(text.slice(position)))
+    new TextEncoder().encode(
+      addMultilineGutterToNewlines(text.slice(cursorPosition))
+    )
   );
 
   await Deno.stdout.write(
@@ -128,14 +128,20 @@ const addMultilineGutterToNewlines = (text) => {
   return [lines[0], ...linesWithGutter].join("\n");
 };
 
-export const rewriteFromPrompt = async (
-  currentUserInput,
-  newUserInput,
-  cursorPosition
-) => {
+export const eraseAllIncludingPrompt = async (buffer) => {
+  await setCursorColumn(0);
+
+  await moveCursorUp(getCursorRow(buffer));
+
+  await Deno.stdout.write(
+    Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
+  );
+};
+
+export const rewriteFromPrompt = async (buffer, newUserInput) => {
   await setCursorColumn(promptLength());
 
-  await moveCursorUp(getCursorRow(currentUserInput, cursorPosition));
+  await moveCursorUp(getCursorRow(buffer));
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
@@ -158,9 +164,19 @@ export const readCommand = async () => {
 
   await Deno.stdout.write(new TextEncoder().encode(prompt()));
 
-  let userInput = "";
-  let cursorPosition = 0;
+  const commandBuffer = {
+    text: "",
+    cursorPosition: 0,
+  };
+
+  const reverseISearchBuffer = {
+    text: "",
+    cursorPosition: 0,
+  };
+
   let tabIndex = -1;
+  let isReverseISearching = false;
+  let currentBuffer = commandBuffer;
 
   while (true) {
     const buf = new Uint8Array(256);
@@ -171,6 +187,25 @@ export const readCommand = async () => {
 
     const controlCharacter = controlCharactersBytesMap[relevantBuf];
 
+    if (isReverseISearching) {
+      if (controlCharacter === "escape") {
+        await eraseAllIncludingPrompt(currentBuffer);
+
+        reverseISearchBuffer.text = "";
+        reverseISearchBuffer.cursorPosition = 0;
+        currentBuffer = commandBuffer;
+        isReverseISearching = false;
+
+        await Deno.stdout.write(new TextEncoder().encode(prompt()));
+        await Deno.stdout.write(
+          new TextEncoder().encode(
+            addMultilineGutterToNewlines(currentBuffer.text)
+          )
+        );
+        continue;
+      }
+    }
+
     if (!["tab", "shiftTab"].includes(controlCharacter)) {
       tabIndex = -1;
     }
@@ -180,17 +215,30 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "ctrlc") {
-      await rewriteFromPrompt(userInput, "", cursorPosition);
+      await rewriteFromPrompt(currentBuffer, "");
 
-      userInput = "";
-      cursorPosition = 0;
+      currentBuffer.text = "";
+      currentBuffer.cursorPosition = 0;
 
       continue;
     }
 
+    if (controlCharacter === "ctrlr") {
+      await eraseAllIncludingPrompt(currentBuffer);
+
+      await Deno.stdout.write(new TextEncoder().encode(reverseISearchPrompt()));
+
+      currentBuffer = reverseISearchBuffer;
+      currentBuffer.cursorPosition = 0;
+      currentBuffer.text = "";
+      isReverseISearching = true;
+      continue;
+    }
+
     if (controlCharacter === "return") {
-      const inFunction = cursorIsInFunction(userInput, cursorPosition);
-      const inQuotes = cursorIsInQuotes(userInput, cursorPosition);
+      // TODO Make different buffers have different behaviours for control characters
+      const inFunction = cursorIsInFunction(currentBuffer);
+      const inQuotes = cursorIsInQuotes(currentBuffer);
       if (inFunction || inQuotes) {
         const indentLevel = inFunction ? 2 : 0;
 
@@ -208,12 +256,15 @@ export const readCommand = async () => {
 
         await Deno.stdout.write(
           new TextEncoder().encode(
-            addMultilineGutterToNewlines(userInput.slice(cursorPosition))
+            addMultilineGutterToNewlines(
+              currentBuffer.text.slice(currentBuffer.cursorPosition)
+            )
           )
         );
 
         const numberOfNewlines =
-          userInput.slice(cursorPosition).split("\n").length - 1;
+          currentBuffer.text.slice(currentBuffer.cursorPosition).split("\n")
+            .length - 1;
 
         for (let i = 0; i < numberOfNewlines; i++) {
           await Deno.stdout.write(
@@ -221,17 +272,18 @@ export const readCommand = async () => {
           );
         }
 
-        new TextEncoder().encode();
-
         await setCursorColumn(promptLength() + indentLevel);
 
         const additionalInput = inFunction ? "\n  " : "\n";
-        userInput =
-          userInput.slice(0, cursorPosition) +
+        currentBuffer.text =
+          currentBuffer.text.slice(0, currentBuffer.cursorPosition) +
           additionalInput +
-          userInput.slice(cursorPosition, userInput.length);
+          currentBuffer.text.slice(
+            currentBuffer.cursorPosition,
+            currentBuffer.text.length
+          );
 
-        cursorPosition += 1 + indentLevel;
+        currentBuffer.cursorPosition += 1 + indentLevel;
 
         continue;
       } else {
@@ -241,71 +293,79 @@ export const readCommand = async () => {
     }
 
     if (controlCharacter === "backspace") {
-      if (cursorPosition === 0) {
+      if (currentBuffer.cursorPosition === 0) {
         continue;
       }
 
-      if (userInput[cursorPosition - 1] === "\n") {
+      if (currentBuffer.text[currentBuffer.cursorPosition - 1] === "\n") {
         // Move the cursor up a row
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        const lastLine = getPreviousLine(userInput, cursorPosition);
+        const lastLine = getPreviousLine(currentBuffer);
         await setCursorColumn(promptLength() + lastLine.length);
 
-        userInput =
-          userInput.slice(0, cursorPosition - 1) +
-          userInput.slice(cursorPosition, userInput.length);
+        currentBuffer.text =
+          currentBuffer.text.slice(0, currentBuffer.cursorPosition - 1) +
+          currentBuffer.text.slice(
+            currentBuffer.cursorPosition,
+            currentBuffer.text.length
+          );
 
-        cursorPosition--;
+        currentBuffer.cursorPosition--;
 
-        await rewriteLineAfterPosition(userInput, cursorPosition);
+        await rewriteLineAfterCursor(currentBuffer);
       } else {
-        userInput =
-          userInput.slice(0, cursorPosition - 1) +
-          userInput.slice(cursorPosition, userInput.length);
+        currentBuffer.text =
+          currentBuffer.text.slice(0, currentBuffer.cursorPosition - 1) +
+          currentBuffer.text.slice(
+            currentBuffer.cursorPosition,
+            currentBuffer.text.length
+          );
 
-        cursorPosition--;
+        currentBuffer.cursorPosition--;
 
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorLeft)
         );
 
-        await rewriteLineAfterPosition(userInput, cursorPosition);
+        await rewriteLineAfterCursor(currentBuffer);
       }
 
       continue;
     }
 
     if (controlCharacter === "delete") {
-      if (cursorPosition === userInput.length) {
+      if (currentBuffer.cursorPosition === currentBuffer.text.length) {
         continue;
       }
 
-      userInput =
-        userInput.slice(0, cursorPosition) +
-        userInput.slice(cursorPosition + 1, userInput.length);
+      currentBuffer.text =
+        currentBuffer.text.slice(0, currentBuffer.cursorPosition) +
+        currentBuffer.text.slice(
+          currentBuffer.cursorPosition + 1,
+          currentBuffer.text.length
+        );
 
-      await rewriteLineAfterPosition(userInput, cursorPosition);
+      await rewriteLineAfterCursor(currentBuffer);
 
       continue;
     }
 
     if (controlCharacter === "up") {
-      const lastLine = getPreviousLine(userInput, cursorPosition);
+      const lastLine = getPreviousLine(currentBuffer);
 
       if (lastLine !== null) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        cursorPosition = getCursorPositionAfterMoveUp(
-          userInput,
-          cursorPosition
+        currentBuffer.cursorPosition = getCursorPositionAfterMoveUp(
+          currentBuffer
         );
 
-        const column = getCursorColumn(userInput, cursorPosition);
+        const column = getCursorColumn(currentBuffer);
         await setCursorColumn(promptLength() + column);
 
         continue;
@@ -317,28 +377,25 @@ export const readCommand = async () => {
 
       currentHistoryIndex--;
       const newUserInput = history[currentHistoryIndex];
-      await rewriteFromPrompt(userInput, newUserInput, cursorPosition);
-      userInput = newUserInput;
-      cursorPosition = userInput.length;
+      await rewriteFromPrompt(currentBuffer, newUserInput);
+      currentBuffer.text = newUserInput;
+      currentBuffer.cursorPosition = currentBuffer.text.length;
 
       continue;
     }
 
     if (controlCharacter === "down") {
-      const nextLine = getNextLine(userInput, cursorPosition);
+      const nextLine = getNextLine(currentBuffer);
       if (nextLine !== null) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
         );
 
-        // console.log("cursor position before ", cursorPosition);
-        cursorPosition = getCursorPositionAfterMoveDown(
-          userInput,
-          cursorPosition
+        currentBuffer.cursorPosition = getCursorPositionAfterMoveDown(
+          currentBuffer
         );
-        // console.log("cursor position after ", cursorPosition);
 
-        const column = getCursorColumn(userInput, cursorPosition);
+        const column = getCursorColumn(currentBuffer);
         await setCursorColumn(promptLength() + column);
 
         continue;
@@ -353,37 +410,37 @@ export const readCommand = async () => {
         currentHistoryIndex === history.length
           ? ""
           : history[currentHistoryIndex];
-      await rewriteFromPrompt(userInput, newUserInput, cursorPosition);
-      userInput = newUserInput;
-      cursorPosition = userInput.length;
+      await rewriteFromPrompt(currentBuffer, newUserInput);
+      currentBuffer.text = newUserInput;
+      currentBuffer.cursorPosition = currentBuffer.text.length;
 
       continue;
     }
 
     if (controlCharacter === "left") {
-      if (cursorPosition === 0) continue;
+      if (currentBuffer.cursorPosition === 0) continue;
 
-      if (userInput[cursorPosition - 1] === "\n") {
+      if (currentBuffer.text[currentBuffer.cursorPosition - 1] === "\n") {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorUp)
         );
 
-        const column = getPreviousLine(userInput, cursorPosition).length;
+        const column = getPreviousLine(currentBuffer).length;
         await setCursorColumn(promptLength() + column);
       } else {
         await Deno.stdout.write(relevantBuf);
       }
 
-      cursorPosition--;
+      currentBuffer.cursorPosition--;
       continue;
     }
 
     if (controlCharacter === "right") {
-      if (cursorPosition === userInput.length) continue;
+      if (currentBuffer.cursorPosition === currentBuffer.text.length) continue;
 
       if (
-        userInput[cursorPosition] === "\n" &&
-        cursorPosition < userInput.length
+        currentBuffer.text[currentBuffer.cursorPosition] === "\n" &&
+        currentBuffer.cursorPosition < currentBuffer.text.length
       ) {
         await Deno.stdout.write(
           Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
@@ -394,69 +451,63 @@ export const readCommand = async () => {
         await Deno.stdout.write(relevantBuf);
       }
 
-      cursorPosition++;
+      currentBuffer.cursorPosition++;
       continue;
     }
 
     if (controlCharacter === "altLeft") {
-      if (cursorPosition === 0) {
+      if (currentBuffer.cursorPosition === 0) {
         continue;
       }
 
-      const { tokenIndex } = getTokenUnderCursor(userInput, cursorPosition);
-      if (tokenIndex < cursorPosition) {
-        cursorPosition = tokenIndex;
+      const { tokenIndex } = getTokenUnderCursor(currentBuffer);
+      if (tokenIndex < currentBuffer.cursorPosition) {
+        currentBuffer.cursorPosition = tokenIndex;
       } else {
-        const { tokenIndex: previousTokenIndex } = getTokenUnderCursor(
-          userInput,
-          cursorPosition - 2
-        );
-        cursorPosition = previousTokenIndex;
+        const { tokenIndex: previousTokenIndex } = getTokenUnderCursor({
+          text: currentBuffer.text,
+          cursorPosition: currentBuffer.cursorPosition - 2,
+        });
+        currentBuffer.cursorPosition = previousTokenIndex;
       }
 
-      await setCursorColumn(promptLength() + cursorPosition);
+      await setCursorColumn(promptLength() + currentBuffer.cursorPosition);
       continue;
     }
 
     if (controlCharacter === "altRight") {
-      if (cursorPosition === userInput.length) {
+      if (currentBuffer.cursorPosition === currentBuffer.text.length) {
         continue;
       }
 
-      const { tokenIndex, token } = getTokenUnderCursor(
-        userInput,
-        cursorPosition
-      );
-      if (tokenIndex + token.length > cursorPosition) {
-        cursorPosition = tokenIndex + token.length;
+      const { tokenIndex, token } = getTokenUnderCursor(currentBuffer);
+      if (tokenIndex + token.length > currentBuffer.cursorPosition) {
+        currentBuffer.cursorPosition = tokenIndex + token.length;
       } else {
-        const { tokenIndex: nextTokenIndex } = getTokenUnderCursor(
-          userInput,
-          tokenIndex + token.length + 2
-        );
-        cursorPosition = nextTokenIndex;
+        const { tokenIndex: nextTokenIndex } = getTokenUnderCursor({
+          ...currentBuffer,
+          cursorPosition: tokenIndex + token.length + 2,
+        });
+        currentBuffer.cursorPosition = nextTokenIndex;
       }
 
-      await setCursorColumn(promptLength() + cursorPosition);
+      await setCursorColumn(promptLength() + currentBuffer.cursorPosition);
       continue;
     }
 
     if (controlCharacter === "home") {
-      cursorPosition = getPositionAtStartOfCurrentLine(
-        userInput,
-        cursorPosition
+      currentBuffer.cursorPosition = getPositionAtStartOfCurrentLine(
+        currentBuffer
       );
-      await setCursorColumn(
-        promptLength() + getCursorColumn(userInput, cursorPosition)
-      );
+      await setCursorColumn(promptLength() + getCursorColumn(currentBuffer));
       continue;
     }
 
     if (controlCharacter === "end") {
-      cursorPosition = getPositionAtEndOfCurrentLine(userInput, cursorPosition);
-      await setCursorColumn(
-        promptLength() + getCursorColumn(userInput, cursorPosition)
+      currentBuffer.cursorPosition = getPositionAtEndOfCurrentLine(
+        currentBuffer
       );
+      await setCursorColumn(promptLength() + getCursorColumn(currentBuffer));
       continue;
     }
 
@@ -464,15 +515,7 @@ export const readCommand = async () => {
       const resetCache = tabIndex === -1;
       tabIndex += 1;
 
-      const { newCursorPosition, newUserInput } = await performTabCompletion(
-        userInput,
-        cursorPosition,
-        tabIndex,
-        resetCache
-      );
-
-      userInput = newUserInput;
-      cursorPosition = newCursorPosition;
+      await performTabCompletion(currentBuffer, tabIndex, resetCache);
 
       continue;
     }
@@ -484,15 +527,7 @@ export const readCommand = async () => {
 
       tabIndex -= 1;
 
-      const { newCursorPosition, newUserInput } = await performTabCompletion(
-        userInput,
-        cursorPosition,
-        tabIndex,
-        false
-      );
-
-      userInput = newUserInput;
-      cursorPosition = newCursorPosition;
+      await performTabCompletion(currentBuffer, tabIndex, false);
 
       continue;
     }
@@ -500,29 +535,32 @@ export const readCommand = async () => {
     // All other text (hopefully normal characters)
     const decodedString = new TextDecoder().decode(relevantBuf);
 
-    userInput =
-      userInput.slice(0, cursorPosition) +
+    currentBuffer.text =
+      currentBuffer.text.slice(0, currentBuffer.cursorPosition) +
       decodedString +
-      userInput.slice(cursorPosition, userInput.length);
+      currentBuffer.text.slice(
+        currentBuffer.cursorPosition,
+        currentBuffer.text.length
+      );
 
-    await rewriteLineAfterPosition(userInput, cursorPosition);
+    await rewriteLineAfterCursor(currentBuffer);
 
     for (var i = 0; i < decodedString.length; i++) {
       await Deno.stdout.write(
         Uint8Array.from(reverseControlCharactersBytesMap.cursorRight)
       );
 
-      cursorPosition += 1;
+      currentBuffer.cursorPosition += 1;
     }
   }
 
   // Disable raw mode while routing stdin to sub-processes.
   Deno.setRaw(0, false);
 
-  if (userInput.length > 0) {
-    history.push(userInput);
+  if (currentBuffer.text.length > 0) {
+    history.push(currentBuffer.text);
     currentHistoryIndex = history.length;
   }
 
-  return userInput;
+  return currentBuffer.text;
 };

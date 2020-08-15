@@ -6,21 +6,16 @@ import rules from "./completionRules/rules.js";
 let textSoFarCache = null;
 let cursorIndexCache = null;
 
-export const complete = async (
-  textSoFar,
-  cursorIndex,
-  tabIndex,
-  resetCache = false
-) => {
+export const complete = async (buffer, tabIndex, resetCache = false) => {
   if (resetCache) {
-    textSoFarCache = textSoFar;
-    cursorIndexCache = cursorIndex;
+    textSoFarCache = buffer.text;
+    cursorIndexCache = buffer.cursorPosition;
   }
 
-  const { token, tokenIndex } = getTokenUnderCursor(
-    textSoFarCache,
-    cursorIndexCache
-  );
+  const { token, tokenIndex } = getTokenUnderCursor({
+    text: textSoFarCache,
+    cursorPosition: cursorIndexCache,
+  });
 
   if (tabIndex === -1) {
     return {
@@ -49,7 +44,7 @@ export const complete = async (
     };
   } catch {
     return {
-      newInput: textSoFar,
+      newInput: buffer.text,
       tokenIndex,
       tokenLength: token.length,
     };
