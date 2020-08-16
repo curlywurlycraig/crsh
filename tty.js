@@ -1,3 +1,5 @@
+import { red } from "https://deno.land/std/fmt/colors.ts";
+
 import {
   prompt,
   promptLength,
@@ -110,14 +112,25 @@ const doSearchAndUpdateResults = async (
   history,
   reverseISearchIndex
 ) => {
-  const match = searchHistory(history, buffer.text, reverseISearchIndex);
+  const { match, matchIndex } = searchHistory(
+    history,
+    buffer.text,
+    reverseISearchIndex
+  );
   if (match) {
     await Deno.stdout.write(
       Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
     );
 
+    const matchWithColorHighlights =
+      match.slice(0, matchIndex) +
+      red(match.slice(matchIndex, matchIndex + buffer.text.length)) +
+      match.slice(matchIndex + buffer.text.length);
+
     await Deno.stdout.write(
-      new TextEncoder().encode(addMultilineGutterToNewlines(`\n${match}`))
+      new TextEncoder().encode(
+        addMultilineGutterToNewlines(`\n${matchWithColorHighlights}`)
+      )
     );
 
     await moveCursorUp(getNumberOfRows(match));
