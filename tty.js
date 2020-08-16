@@ -113,6 +113,10 @@ const doSearchAndUpdateResults = async (
   const match = searchHistory(history, buffer.text, reverseISearchIndex);
   if (match) {
     await Deno.stdout.write(
+      Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
+    );
+
+    await Deno.stdout.write(
       new TextEncoder().encode(addMultilineGutterToNewlines(`\n${match}`))
     );
 
@@ -481,6 +485,23 @@ export const readCommand = async () => {
       };
 
       const reverseISearchMap = {
+        ctrlr: async () => {
+          reverseISearchIndex += 1;
+
+          if (!currentBuffer.text) {
+            return;
+          }
+
+          const match = await doSearchAndUpdateResults(
+            currentBuffer,
+            history,
+            reverseISearchIndex
+          );
+
+          if (match) {
+            reverseISearchResult = match;
+          }
+        },
         escape: async () => {
           await eraseAllIncludingPrompt(currentBuffer);
 
@@ -510,6 +531,8 @@ export const readCommand = async () => {
           if (match) {
             reverseISearchResult = match;
           }
+
+          reverseISearchIndex = 0;
         },
         return: async () => {
           await eraseAllIncludingPrompt(currentBuffer);

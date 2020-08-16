@@ -1,5 +1,6 @@
 const searchHistory = (history, searchString, index) => {
   const matches = history
+    .slice(0)
     .reverse()
     .filter((item) => item.includes(searchString));
 

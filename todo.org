@@ -1,4 +1,5 @@
 * TODO Persist history
+* TODO Improve tab completion
 * TODO Make it possible to do "run('ls | grep thing')" inside anon functions.
 Current issue is that | is split by the parser too eagerly
 
