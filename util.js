@@ -195,3 +195,37 @@ export const cursorIsInQuotes = ({ text, cursorPosition }) => {
 
   return isInQuotes || isInSingleQuotes;
 };
+
+const getHistoryFileLocation = () => {
+  const crshHome = Deno.env.get("CRSH_HOME");
+  return `${crshHome}/user/history.json`;
+};
+
+const healHistoryFile = () => {
+  Deno.writeFileSync(
+    getHistoryFileLocation(),
+    new TextEncoder().encode(JSON.stringify([], null, 2))
+  );
+};
+
+export const readHistory = () => {
+  try {
+    const historyBytes = Deno.readFileSync(getHistoryFileLocation());
+    return JSON.parse(new TextDecoder().decode(historyBytes));
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) {
+      healHistoryFile();
+
+      return [];
+    } else {
+      throw e;
+    }
+  }
+};
+
+export const addToHistory = (history) => {
+  Deno.writeFileSync(
+    getHistoryFileLocation(),
+    new TextEncoder().encode(JSON.stringify(history, null, 2))
+  );
+};

@@ -30,6 +30,8 @@ import {
   getTokenUnderCursor,
   cursorIsInFunction,
   cursorIsInQuotes,
+  readHistory,
+  addToHistory,
 } from "./util.js";
 
 export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
@@ -140,10 +142,6 @@ const doSearchAndUpdateResults = async (
   return match;
 };
 
-// TODO Read history from a file
-const history = [];
-let currentHistoryIndex = history.length;
-
 export const readCommand = async () => {
   // This sets the terminal to non-canonical mode.
   // That's essential for capturing raw key-presses.
@@ -167,6 +165,10 @@ export const readCommand = async () => {
   let reverseISearchIndex = 0;
   let currentBuffer = commandBuffer;
   let reverseISearchResult = null;
+
+  const history = readHistory();
+
+  let currentHistoryIndex = history.length;
 
   const writingCommandPromise = new Promise(async (resolve, reject) => {
     let running = true;
@@ -598,6 +600,8 @@ export const readCommand = async () => {
 
   if (currentBuffer.text.length > 0) {
     history.push(currentBuffer.text);
+    addToHistory(history);
+
     currentHistoryIndex = history.length;
   }
 
