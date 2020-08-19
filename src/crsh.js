@@ -1,4 +1,4 @@
-import { startup } from "./user/startup.js";
+import { startup } from "../startup.js";
 import { run } from "./run.js";
 import { readCommand } from "./tty.js";
 

@@ -198,7 +198,7 @@ export const cursorIsInQuotes = ({ text, cursorPosition }) => {
 
 const getHistoryFileLocation = () => {
   const crshHome = Deno.env.get("CRSH_HOME");
-  return `${crshHome}/user/history.json`;
+  return `${crshHome}/history.json`;
 };
 
 const healHistoryFile = () => {
