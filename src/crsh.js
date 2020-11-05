@@ -4,12 +4,19 @@ import { readCommand } from "./tty.js";
 
 await startup();
 
-while (true) {
-  const userInput = await readCommand();
+const runMain = async () => {
+  // Catch SIGINT.
+  Deno.signal(Deno.Signal.SIGINT);
 
-  try {
-    await run(userInput, true);
-  } catch (err) {
-    console.error(err);
+  while (true) {
+    const userInput = await readCommand();
+
+    try {
+      await run(userInput, true);
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
+
+await runMain();
