@@ -198,13 +198,14 @@ export const run = (userInput, isTTY) => {
         }
 
         const shouldInheritStdout = isLast && outputFile === null && isTTY;
+        const shouldInheritStdErr = isLast && isTTY;
 
         // TODO Support stderr pipes, and also file output
         const p = Deno.run({
           cmd: [executable, ...args],
           stdin: isFirst ? "inherit" : "piped",
           stdout: shouldInheritStdout ? "inherit" : "piped",
-          stderr: isLast ? "inherit" : "piped",
+          stderr: shouldInheritStdErr ? "inherit" : "piped",
         });
 
         if (!isFirst) {

@@ -110,7 +110,12 @@ value
 
 # Installation
 [Install Deno](https://deno.land/#installation)
-Clone this repo.
+
+Clone this repo: `git clone git@github.com:curlywurlycraig/crsh.git`
+
+CD into repo: `cd crsh`.
+
+Copy defaults: `cp userDefaults/* .`
 
 
 # Running
