@@ -392,7 +392,7 @@ export const readCommand = async () => {
               )
             );
 
-            const calculatedMultilineGutter = await multilineGutter();
+            const calculatedMultilineGutter = multilineGutter(promptCache);
 
             await Deno.stdout.write(
               new TextEncoder().encode(`\n${calculatedMultilineGutter}`)
