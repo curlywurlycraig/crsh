@@ -1,11 +1,11 @@
-import { red } from "https://deno.land/std/fmt/colors.ts";
+import { red, stripColor } from "https://deno.land/std/fmt/colors.ts";
 
 import {
   prompt,
-  promptLengthOnCursorLine,
   multilineGutter,
   reverseISearchPrompt,
   promptHeight,
+  getLengthOfLastLine,
 } from "./prompt.js";
 import {
   controlCharactersBytesMap,
@@ -35,6 +35,12 @@ import {
   addToHistory,
 } from "./util.js";
 
+// Cached to avoid calculation on every keypress.
+// This is only liable to change when the prompt is re-rendered
+let leftmostColumnCache;
+let promptCache;
+let promptHeightCache;
+
 export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
   const { newInput, tokenIndex, tokenLength } = await complete(
     buffer,
@@ -42,7 +48,7 @@ export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
     resetCache
   );
 
-  await setCursorColumn(await promptLengthOnCursorLine());
+  await setCursorColumn(leftmostColumnCache);
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfLine)
@@ -51,7 +57,7 @@ export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
   // Rewrite text
   await Deno.stdout.write(new TextEncoder().encode(newInput));
 
-  await setCursorColumn(await promptLengthOnCursorLine() + buffer.cursorPosition);
+  await setCursorColumn(leftmostColumnCache + buffer.cursorPosition);
 
   buffer.cursorPosition = tokenIndex;
   buffer.text = newInput;
@@ -80,7 +86,7 @@ export const rewriteLineAfterCursor = async ({ text, cursorPosition }) => {
 
 const addMultilineGutterToNewlines = async (text) => {
   const lines = text.split("\n");
-  const calculatedMultilineGutter = await multilineGutter();
+  const calculatedMultilineGutter = multilineGutter(promptCache);
   const linesWithGutter = lines
     .slice(1)
     .map((line) => `${calculatedMultilineGutter}${line}`);
@@ -90,7 +96,7 @@ const addMultilineGutterToNewlines = async (text) => {
 export const eraseAllIncludingPrompt = async (buffer) => {
   await setCursorColumn(0);
 
-  await moveCursorUp(getCursorRow(buffer) + await promptHeight() - 1);
+  await moveCursorUp(getCursorRow(buffer) + promptHeightCache - 1);
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
@@ -98,9 +104,9 @@ export const eraseAllIncludingPrompt = async (buffer) => {
 };
 
 export const rewriteFromPrompt = async (buffer, newUserInput) => {
-  await setCursorColumn(await promptLengthOnCursorLine());
+  await setCursorColumn(leftmostColumnCache);
 
-  await moveCursorUp(getCursorRow(buffer) + await promptHeight() - 2);
+  await moveCursorUp(getCursorRow(buffer) + promptHeightCache - 2);
 
   await Deno.stdout.write(
     Uint8Array.from(reverseControlCharactersBytesMap.eraseToEndOfScreen)
@@ -138,7 +144,7 @@ const doSearchAndUpdateResults = async (
     );
 
     await moveCursorUp(getNumberOfRows(match));
-    await setCursorColumn(await promptLengthOnCursorLine() + buffer.cursorPosition);
+    await setCursorColumn(leftmostColumnCache + buffer.cursorPosition);
   }
 
   return match;
@@ -150,7 +156,11 @@ export const readCommand = async () => {
   // It's what allows pressing up to navigate history, for example. Or moving the cursor left
   Deno.setRaw(0, true);
 
-  await Deno.stdout.write(new TextEncoder().encode(await prompt()));
+  promptCache = await prompt();
+  leftmostColumnCache = getLengthOfLastLine(promptCache);
+  promptHeightCache = promptHeight(promptCache);
+
+  await Deno.stdout.write(new TextEncoder().encode(promptCache));
 
   const commandBuffer = {
     text: "",
@@ -200,7 +210,7 @@ export const readCommand = async () => {
             );
 
             const column = getPreviousLine(currentBuffer).length;
-            await setCursorColumn(await promptLengthOnCursorLine() + column);
+            await setCursorColumn(leftmostColumnCache + column);
           } else {
             await Deno.stdout.write(relevantBuf);
           }
@@ -219,7 +229,7 @@ export const readCommand = async () => {
               Uint8Array.from(reverseControlCharactersBytesMap.cursorDown)
             );
 
-            await setCursorColumn(await promptLengthOnCursorLine());
+            await setCursorColumn(leftmostColumnCache);
           } else {
             await Deno.stdout.write(relevantBuf);
           }
@@ -242,7 +252,7 @@ export const readCommand = async () => {
             currentBuffer.cursorPosition = previousTokenIndex;
           }
 
-          await setCursorColumn(await promptLengthOnCursorLine() + currentBuffer.cursorPosition);
+          await setCursorColumn(leftmostColumnCache + currentBuffer.cursorPosition);
         },
         altRight: async () => {
           if (currentBuffer.cursorPosition === currentBuffer.text.length) {
@@ -260,14 +270,14 @@ export const readCommand = async () => {
             currentBuffer.cursorPosition = nextTokenIndex;
           }
 
-          await setCursorColumn(await promptLengthOnCursorLine() + currentBuffer.cursorPosition);
+          await setCursorColumn(leftmostColumnCache + currentBuffer.cursorPosition);
         },
         home: async () => {
           currentBuffer.cursorPosition = getPositionAtStartOfCurrentLine(
             currentBuffer
           );
           await setCursorColumn(
-            await promptLengthOnCursorLine() + getCursorColumn(currentBuffer)
+            leftmostColumnCache + getCursorColumn(currentBuffer)
           );
         },
         end: async () => {
@@ -275,7 +285,7 @@ export const readCommand = async () => {
             currentBuffer
           );
           await setCursorColumn(
-            await promptLengthOnCursorLine() + getCursorColumn(currentBuffer)
+            leftmostColumnCache + getCursorColumn(currentBuffer)
           );
         },
         backspace: async () => {
@@ -290,7 +300,7 @@ export const readCommand = async () => {
             );
 
             const lastLine = getPreviousLine(currentBuffer);
-            await setCursorColumn(await promptLengthOnCursorLine() + lastLine.length);
+            await setCursorColumn(leftmostColumnCache + lastLine.length);
 
             currentBuffer.text =
               currentBuffer.text.slice(0, currentBuffer.cursorPosition - 1) +
@@ -410,7 +420,7 @@ export const readCommand = async () => {
               );
             }
 
-            await setCursorColumn(await promptLengthOnCursorLine() + indentLevel);
+            await setCursorColumn(leftmostColumnCache + indentLevel);
 
             const additionalInput = inFunction ? "\n  " : "\n";
             currentBuffer.text =
@@ -441,7 +451,7 @@ export const readCommand = async () => {
             );
 
             const column = getCursorColumn(currentBuffer);
-            await setCursorColumn(await promptLengthOnCursorLine() + column);
+            await setCursorColumn(leftmostColumnCache + column);
 
             return;
           }
@@ -468,7 +478,7 @@ export const readCommand = async () => {
             );
 
             const column = getCursorColumn(currentBuffer);
-            await setCursorColumn(await promptLengthOnCursorLine() + column);
+            await setCursorColumn(leftmostColumnCache + column);
 
             return;
           }
@@ -529,7 +539,7 @@ export const readCommand = async () => {
           currentBuffer = commandBuffer;
           isReverseISearching = false;
 
-          await Deno.stdout.write(new TextEncoder().encode(await prompt()));
+          await Deno.stdout.write(new TextEncoder().encode(promptCache));
           await Deno.stdout.write(
             new TextEncoder().encode(
               await addMultilineGutterToNewlines(currentBuffer.text)
@@ -566,7 +576,7 @@ export const readCommand = async () => {
           currentBuffer = commandBuffer;
           isReverseISearching = false;
 
-          await Deno.stdout.write(new TextEncoder().encode(await prompt()));
+          await Deno.stdout.write(new TextEncoder().encode(promptCache));
           await Deno.stdout.write(
             new TextEncoder().encode(
               await addMultilineGutterToNewlines(currentBuffer.text)
