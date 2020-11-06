@@ -218,14 +218,20 @@ export const run = (userInput, isTTY) => {
 
         if (isLast && outputFile !== null) {
           await Deno.copy(p.stdout, outputFile);
-          await p.stdout?.close();
-          await p.stderr?.close();
           await outputFile.close();
         }
 
         if (isLast && !isTTY) {
           finalResult = new TextDecoder().decode(await Deno.readAll(p.stdout));
         }
+
+	if (!shouldInheritStdout) {
+	  await p.stdout?.close();
+	}
+
+	if (!shouldInheritStdErr) {
+	  await p.stderr?.close();
+	}
 
         lastIO = {
           stdout: p.stdout,
