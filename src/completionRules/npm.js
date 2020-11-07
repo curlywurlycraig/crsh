@@ -44,10 +44,9 @@ const yarnCommands = [
   "workspaces",
 ];
 
-// TODO Make work with yarn AND npm
 const npmRules = [
   {
-    match: /^yarn $/,
+    match: /^yarn /,
     complete: async (token, tabIndex) => {
       const packageJsonRaw = await exec("cat", ["package.json"]);
       const customCommands =
@@ -56,6 +55,22 @@ const npmRules = [
           : [];
 
       const commands = [...customCommands, ...yarnCommands].filter((command) =>
+        command.startsWith(token)
+      );
+
+      return commands[tabIndex % commands.length];
+    },
+  },
+  {
+    match: /^npm run /,
+    complete: async (token, tabIndex) => {
+      const packageJsonRaw = await exec("cat", ["package.json"]);
+      const customCommands =
+        packageJsonRaw.length > 0
+          ? Object.keys(JSON.parse(packageJsonRaw).scripts)
+          : [];
+
+      const commands = customCommands.filter((command) =>
         command.startsWith(token)
       );
 
