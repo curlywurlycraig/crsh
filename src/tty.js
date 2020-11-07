@@ -57,10 +57,10 @@ export const performTabCompletion = async (buffer, tabIndex, resetCache) => {
   // Rewrite text
   await Deno.stdout.write(new TextEncoder().encode(newInput));
 
-  await setCursorColumn(leftmostColumnCache + buffer.cursorPosition);
-
-  buffer.cursorPosition = tokenIndex;
+  buffer.cursorPosition = tokenIndex + tokenLength;
   buffer.text = newInput;
+
+  await setCursorColumn(leftmostColumnCache + getCursorColumn(buffer));
 };
 
 export const rewriteLineAfterCursor = async ({ text, cursorPosition }) => {

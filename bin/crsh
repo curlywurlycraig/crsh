@@ -1,2 +1,2 @@
 #!/bin/bash
-/Users/craig.wilkinson/.deno/bin/deno run --allow-run --allow-read --allow-write --allow-net --allow-env --unstable /Users/craig.wilkinson/projects/deno-shell/src/crsh.js
+/Users/craig/.deno/bin/deno run --allow-run --allow-read --allow-write --allow-net --allow-env --unstable /Users/craig/Documents/projects/deno_shell/src/crsh.js
