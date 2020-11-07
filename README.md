@@ -109,26 +109,24 @@ value
 ```
 
 # Installation
+This process is still quite manual. At some point I would like to create a setup script to do this.
+
 [Install Deno](https://deno.land/#installation)
 
-Clone this repo: `git clone git@github.com:curlywurlycraig/crsh.git`
+Clone this repo into the `~/.crsh` directory: `git clone git@github.com:curlywurlycraig/crsh.git ~/.crsh`
 
-CD into repo: `cd crsh`.
+CD into repo: `cd ~/.crsh`.
 
 Copy defaults: `cp userDefaults/* .`
 
-
 # Running
-`./crsh`
+`~/.crsh/bin/crsh`
 You may need to make the above file executable:
-`chmod +x crsh`
-
-# Example command
-`curl https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49 | ({ json }) => json.locations`
+`chmod +x ~/.crsh/bin/crsh`
 
 # Configuration
-Edit `completionRules/rules.js` to include your own completion rules.
-Edit `prompt.sh` to make your own prompt.
+Edit `~/.crsh/completionRules/rules.js` to include your own completion rules.
+Edit `~/.crsh/prompt.sh` to make your own prompt.
 
 # Contributing
 

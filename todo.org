@@ -1,8 +1,6 @@
 * TODO Installation, ignoring user files.
 - [ ] Create some kind of setup.
 Check if user files exist. If they don't, copy the templates into the user files.
-- [ ] Move user files to root
-- [ ] Add user files to gitignore.
 - [ ] Generate bin script based on user $HOME upon installation
 - [ ] Make importing of user files resilient
 Do this by making some kind of user file interface that self-heals by copying the default if no user file is available
