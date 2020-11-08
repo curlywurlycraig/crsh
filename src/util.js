@@ -88,7 +88,7 @@ export const expandGlob = async (token) => {
   for await (const dirEntry of Deno.readDir(dir)) {
     const fileSuffix = dirEntry.isDirectory ? "/" : "";
     const name = `${dirEntry.name}${fileSuffix}`;
-    const fileName = dir === "." ? name : `${dir}/${name}${fileSuffix}`;
+    const fileName = dir === "." ? name : `${dir}/${name}`;
 
     if (fileName.endsWith(suffix) && fileName.startsWith(prefix)) {
       filesInCurrentDir.push(fileName);
