@@ -65,6 +65,9 @@ export const run = (userInput, isTTY) => {
       stderr: new StringReader(""),
     };
 
+    lastIO.stdout.close = () => {};
+    lastIO.stderr.close = () => {};
+
     ///////
     // Command execution
     ///////
@@ -82,6 +85,8 @@ export const run = (userInput, isTTY) => {
         const lastOutput = new TextDecoder().decode(
           await Deno.readAll(lastIO.stdout)
         );
+        await lastIO.stdout?.close();
+        await lastIO.stderr?.close();
 
         let json = undefined;
         try {
@@ -168,6 +173,9 @@ export const run = (userInput, isTTY) => {
           const lastOutput = new TextDecoder().decode(
             await Deno.readAll(lastIO.stdout)
           );
+          await lastIO.stdout?.close();
+          await lastIO.stderr?.close();
+
           const result = await builtins[executable](args, lastOutput);
           const nextContent = result ? result.toString() : "";
           lastIO = {
@@ -214,6 +222,9 @@ export const run = (userInput, isTTY) => {
 
           await Deno.copy(prevOutput, currentInput);
           await p.stdin.close();
+
+          await lastIO.stdout?.close();
+          await lastIO.stderr?.close();
         }
 
         if (isLast && outputFile !== null) {
@@ -223,15 +234,9 @@ export const run = (userInput, isTTY) => {
 
         if (isLast && !isTTY) {
           finalResult = new TextDecoder().decode(await Deno.readAll(p.stdout));
+          await p.stdout?.close();
+          await p.stderr?.close();
         }
-
-	if (!shouldInheritStdout) {
-	  await p.stdout?.close();
-	}
-
-	if (!shouldInheritStdErr) {
-	  await p.stderr?.close();
-	}
 
         lastIO = {
           stdout: p.stdout,
