@@ -15,6 +15,6 @@ export const startup = async () => {
 
   await run(`export PATH=$PATH:${pathString}`);
 
-  const crshHome = `${home}/Documents/projects/deno_shell`;
+  const crshHome = `${home}/.crsh/`;
   await run(`export CRSH_HOME=${crshHome}`);
 };
