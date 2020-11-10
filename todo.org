@@ -1,3 +1,9 @@
+* Next bugs
+** Fix git command with full name
+** Fix piping output from anon func failing
+** !!
+** Jobs
+
 * TODO Installation, ignoring user files.
 - [ ] Create some kind of setup.
 Check if user files exist. If they don't, copy the templates into the user files.

@@ -1,8 +1,7 @@
 import { expandGlob, expandHome } from "../util.js";
 
 export const completeFile = async (token, tabIndex) => {
-  const withHomeExpanded = expandHome(token);
-  const files = await expandGlob(`${withHomeExpanded}*`);
+  const files = await expandGlob(`${token}*`);
   const currentFile = files[tabIndex % files.length];
 
   return currentFile;

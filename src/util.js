@@ -85,7 +85,9 @@ export const expandGlob = async (token) => {
 
   let filesInCurrentDir = [];
 
-  for await (const dirEntry of Deno.readDir(dir)) {
+  const withHomeExpanded = expandHome(dir);
+
+  for await (const dirEntry of Deno.readDir(withHomeExpanded)) {
     const fileSuffix = dirEntry.isDirectory ? "/" : "";
     const name = `${dirEntry.name}${fileSuffix}`;
     const fileName = dir === "." ? name : `${dir}/${name}`;
@@ -94,7 +96,7 @@ export const expandGlob = async (token) => {
       filesInCurrentDir.push(fileName);
     }
   }
-
+  
   return filesInCurrentDir;
 };
 
@@ -157,7 +159,8 @@ export const expandGlobs = async (stringInput) => {
 };
 
 export const expandHome = (stringInput) => {
-  const homeRegex = /\~/g;
+  // Only match at start of line or after space. So that e.g. HEAD~2 in git still works.
+  const homeRegex = /(?<=\ |^)\~/g;
 
   return stringInput.replace(homeRegex, Deno.env.get("HOME"));
 };
