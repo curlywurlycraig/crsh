@@ -1,6 +1,6 @@
 * Next bugs
-** Fix git command with full name
 ** Fix piping output from anon func failing
+** Fix git command with full name
 ** Jobs
 ** Tab completion show options underneath
 

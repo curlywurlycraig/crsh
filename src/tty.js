@@ -613,6 +613,8 @@ export const readCommand = async () => {
   // Disable raw mode while routing stdin to sub-processes.
   Deno.setRaw(0, false);
 
+  // Double bang command is unique in that it is expanded before the execution step.
+  // This means that "!!" never appears in the history.
   const result = expandDoubleBang(currentBuffer.text);
 
   if (result.length > 0) {

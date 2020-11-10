@@ -31,6 +31,10 @@ export const builtins = {
       Deno.env.set(key, value);
     });
   },
+  history: async () => {
+    const crshHome = Deno.env.get("CRSH_HOME");
+    return await run(`cat ${crshHome}/history.json | ({ json }) => json | less`);
+  }
 };
 
 export const defaultExtraUnixArgs = {

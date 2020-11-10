@@ -2,7 +2,6 @@ import { StringReader } from "https://deno.land/std@0.50.0/io/readers.ts";
 import { StringWriter } from "https://deno.land/std@0.50.0/io/writers.ts";
 
 import { builtins, defaultExtraUnixArgs } from "./builtins.js";
-import { readCommand } from "./tty.js";
 import {
   mergeArgsBetweenQuotes,
   replaceEnvVars,
@@ -128,6 +127,8 @@ export const run = (userInput, isTTY) => {
             stderr: new StringReader(""),
             stdin: new StringWriter(),
           };
+          lastIO.stdout.close = () => {};
+          lastIO.stderr.close = () => {};
 
           if (isLast) {
             finalResult = nextContent;
@@ -176,13 +177,26 @@ export const run = (userInput, isTTY) => {
           const result = await builtins[executable](args, lastOutput);
           const nextContent = result ? result.toString() : "";
           lastIO = {
-            stdout: new StringReader(`${nextContent}\n`),
+            stdout: new StringReader(`${nextContent}`),
             stderr: new StringReader(""),
             stdin: new StringWriter(),
           };
+          lastIO.stdout.close = () => {};
+          lastIO.stderr.close = () => {};
 
           if (isLast) {
             finalResult = nextContent;
+          }
+
+          if (isLast && outputFile === null) {
+            await Deno.stdout.write(
+              new TextEncoder().encode(`${nextContent}`)
+            );
+          } else if (isLast && outputFile !== null) {
+            await outputFile.write(
+              new TextEncoder().encode(`${nextContent}\n`)
+            );
+            await outputFile.close();
           }
         } catch (err) {
           console.error(
