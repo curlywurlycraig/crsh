@@ -31,13 +31,6 @@ export const builtins = {
       Deno.env.set(key, value);
     });
   },
-  "!!": async () => {
-    const history = readHistory();
-    if (history.length > 0) {
-      const latestCommand = history[history.length - 1];
-      await run(latestCommand, true);
-    }
-  }
 };
 
 export const defaultExtraUnixArgs = {

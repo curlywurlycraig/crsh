@@ -7,8 +7,7 @@ import {
   mergeArgsBetweenQuotes,
   replaceEnvVars,
   evalAndInterpolateJS,
-  expandGlobs,
-  expandHome,
+  expandCommand
 } from "./util.js";
 
 export const run = (userInput, isTTY) => {
@@ -152,13 +151,11 @@ export const run = (userInput, isTTY) => {
         continue;
       }
 
-      const withGlobsExpanded = await expandGlobs(
-        expandHome(withEnvVarsReplaced)
-      );
+      const expanded = await expandCommand(withEnvVarsReplaced);
 
       let withInterpolatedJS;
       try {
-        withInterpolatedJS = evalAndInterpolateJS(withGlobsExpanded);
+        withInterpolatedJS = evalAndInterpolateJS(expanded);
       } catch (err) {
         console.error("Failed to interpolate JS: ", err.toString());
         await incrementAndCheckCompletion();

@@ -96,7 +96,7 @@ export const expandGlob = async (token) => {
       filesInCurrentDir.push(fileName);
     }
   }
-  
+
   return filesInCurrentDir;
 };
 
@@ -156,6 +156,26 @@ export const expandGlobs = async (stringInput) => {
   }
 
   return result;
+};
+
+export const expandDoubleBang = (command) => {
+  const doubleBangRegex = /!!/g;
+
+  if (command.search("!!") === -1) {
+    return command;
+  }
+
+  const history = readHistory();
+  const lastCommand = history[history.length - 1];
+  return command.replace(doubleBangRegex, lastCommand)
+}
+
+export const expandCommand = async (command) => {
+  return await expandGlobs(
+    expandHome(
+      command
+    )
+  );
 };
 
 export const expandHome = (stringInput) => {
@@ -218,6 +238,7 @@ export const readHistory = () => {
     const historyBytes = Deno.readFileSync(getHistoryFileLocation());
     return JSON.parse(new TextDecoder().decode(historyBytes));
   } catch (e) {
+    console.log('what the');
     if (e instanceof Deno.errors.NotFound) {
       healHistoryFile();
 

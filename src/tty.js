@@ -33,6 +33,7 @@ import {
   cursorIsInQuotes,
   readHistory,
   addToHistory,
+  expandDoubleBang,
 } from "./util.js";
 
 // Cached to avoid calculation on every keypress.
@@ -612,12 +613,14 @@ export const readCommand = async () => {
   // Disable raw mode while routing stdin to sub-processes.
   Deno.setRaw(0, false);
 
-  if (currentBuffer.text.length > 0 && currentBuffer.text !== "!!") {
-    history.push(currentBuffer.text);
+  const result = expandDoubleBang(currentBuffer.text);
+
+  if (result.length > 0) {
+    history.push(result);
     addToHistory(history);
 
     currentHistoryIndex = history.length;
   }
 
-  return currentBuffer.text;
+  return result;
 };
