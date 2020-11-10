@@ -1,8 +1,8 @@
 * Next bugs
 ** Fix git command with full name
 ** Fix piping output from anon func failing
-** !!
 ** Jobs
+** Tab completion show options underneath
 
 * TODO Installation, ignoring user files.
 - [ ] Create some kind of setup.

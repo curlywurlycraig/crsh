@@ -1,3 +1,6 @@
+import { readHistory } from "./util.js";
+import { run } from "./run.js";
+
 export const builtins = {
   exit: () => Deno.exit(0),
   cd: (args) => {
@@ -28,6 +31,13 @@ export const builtins = {
       Deno.env.set(key, value);
     });
   },
+  "!!": async () => {
+    const history = readHistory();
+    if (history.length > 0) {
+      const latestCommand = history[history.length - 1];
+      await run(latestCommand, true);
+    }
+  }
 };
 
 export const defaultExtraUnixArgs = {

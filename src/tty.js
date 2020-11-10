@@ -612,7 +612,7 @@ export const readCommand = async () => {
   // Disable raw mode while routing stdin to sub-processes.
   Deno.setRaw(0, false);
 
-  if (currentBuffer.text.length > 0) {
+  if (currentBuffer.text.length > 0 && currentBuffer.text !== "!!") {
     history.push(currentBuffer.text);
     addToHistory(history);
 
